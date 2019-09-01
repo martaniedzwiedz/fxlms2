@@ -140,12 +140,17 @@ void send_to_dsp(int8_t *dst, char *dsp_device)
 	fd = open(dsp_device, O_RDWR);
 	if(fd == -1){
 		perror("cannot open DSP device");
+	//	ret = -errno;
+	//	goto out;
 	}
 
 	filty = mmap(NULL, 0xf0000, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0xf00000);
 
 	if(filty==MAP_FAILED){
 		perror("cannot map DSP shared memory");
+	//ret = -errno;
+	//goto out_close;
+	
 	}
 
 	shm_save = filty;
