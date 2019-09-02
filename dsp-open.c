@@ -176,11 +176,9 @@ static unsigned int error_mic_to_input(unsigned int p)
 
 const float ***s;
 struct lf_ring ***r;
+struct lf_ring *e;
 static struct lf_ring x;
 static struct lf_ring feedback_ref[8];
-//static const int un = 4;
-//static const int xn = 1;
-//static const int en = 1; //jeden ?
 
 static struct fxlms_params plate_params = {
 	.u	= 4,
@@ -192,6 +190,7 @@ static struct fxlms_params plate_params = {
 	.zeta	= 1e-6,
 };
 
+static int num_errors[9] = {1,2,3,9, 10, 11,19, 27, 35};
 static double feedback_neutralization()
 {
 	unsigned int ui;
@@ -224,20 +223,23 @@ static double fxlms_normalize(const struct lf_ring ***r){
 	unsigned int i = 0;
 	double power = 0;
 
-	//TODO what should be in ei?
 	unsigned int ei = 0;
-	xi = 0;
+
+	ei = 0;
 	do{
-		ui = 0;
+		xi = 0;
 		do{
-			i = 0;
+			ui = 0;
 			do{
-				float t = lf_ring_get(&r[xi][ei][ui], i);
-				power += t * t;
-			       i++;	
-			}while(i < plate_params.n);
-		}while(++ui<plate_params.u);
-	}while(++xi<plate_params.x);
+				i = 0;
+				do{
+					float t = lf_ring_get(&r[xi][ei][ui], i);
+					power += t * t;
+			       		i++;	
+				}while(i < plate_params.n);
+			}while(++ui < plate_params.u);
+		}while(++xi < plate_params.x);
+	}while(++ei < 2);
 	return plate_params.mu / (power + plate_params.zeta);
 };	
 
@@ -301,16 +303,30 @@ for (int j=0; j < 1; j++){
 	//set s from models
 	for(int ei = 0; ei < plate_params.e; ei++){
 		for(int ui=0; ui<plate_params.u; ui++){
-			s[ei][ui] = models[ui][error_mic_to_input(node_id)];
+		//	s[ei][ui] = models[ui][error_mic_to_input(node_id)];
+			s[ei][ui] = models[ui][num_errors[ei]];
 		}
 	}
+
+	//init x to lfir
 	lf_ring_init(&x, REFERENCE_N);
 	lf_ring_set_buffer(&x, NULL, 0);
 	lf_ring_add(&x, x_full);
 
 	fxlms_initialize_r();
+	///////INIT AND LOAD E
+	e = malloc(plate_params.e * sizeof(*e));
+	for (int ei = 0; ei < plate_params.e; ei++) {
+		lf_ring_init(&e[ei], SEC_FILTER_N);
+		lf_ring_set_buffer(&e[ei], NULL, 0);
+	}
 
-	//filter reference signal with s
+	for(int ei = 0; ei < plate_params.e; ei++ ){
+		printf("error: %lf\n ", inputs[num_errors[ei]]);
+		lf_ring_add(&e[ei], inputs[num_errors[ei]]);
+	}
+	/////////////
+//filter reference signal with s
 	int xi = 0;
 	do {
 		int ei = 0;
@@ -327,6 +343,8 @@ for (int j=0; j < 1; j++){
 		} while (++ei < plate_params.e);
 		xi++;
 	} while (xi < plate_params.x);
+
+
 }
 
 double mu = fxlms_normalize(r);
