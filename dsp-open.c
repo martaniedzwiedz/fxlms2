@@ -191,13 +191,13 @@ static struct fxlms_params plate_params = {
 };
 
 static int num_errors[9] = {1,2,3,9, 10, 11,19, 27, 35};
-static double feedback_neutralization()
+static double feedback_neutralization(int node_id)
 {
 	unsigned int ui;
 	double f = 0;
 
 	for (ui = 0; ui < plate_params.u ; ui++)
-		f = lf_fir(&feedback_ref[ui], models[ui][REFERENCE_CHANNEL], FEEDBACK_N);
+		f = lf_fir(&feedback_ref[ui], models[node_id][ui][REFERENCE_CHANNEL], FEEDBACK_N);
 	return f;
 }
 
@@ -268,14 +268,11 @@ int main() {
 	}
 	double x_full = inputs[REFERENCE_CHANNEL];
 
-
+	//load data to model
+	init_models();
 /********************************************************FEEDBACK NEUTRALIZATION**********************************************************/
 	for(int j=0; j < CONTROL_N; j++){
-
-		//load data to models
-		node_id = j;
-		init_models();
-
+	
 		for (int i = 0; i < 8; i++) {
 			lf_ring_init(feedback_ref + i, 256);
 			lf_ring_set_buffer(feedback_ref + i, NULL, 0);
@@ -283,9 +280,9 @@ int main() {
 
 		//TODO distinguish outputs from different control channels
 		for (int i = 0; i < plate_params.u; i++)
-			lf_ring_add(&feedback_ref[i], *outputs[i]);
+			lf_ring_add(&feedback_ref[i], outputs[j][i]);
 		
-		x_full -= feedback_neutralization();
+		x_full -= feedback_neutralization(j);
 	}
 
 /*****************************************************FILTER REFERENCY WITH SECONDARY PATH MODEL*****************************************/
@@ -293,8 +290,8 @@ int main() {
 for (int j=0; j < 1; j++){
 //for (int j=0; j < CONTROL_N; j++){}
 
-	node_id = j;
-	init_models();
+//	node_id = j;
+//	init_models();
 	//alokacja miejsca na model s path
 	s = malloc(plate_params.e * sizeof(*s));
 	for (int ei = 0; ei < plate_params.e; ei++)
@@ -304,7 +301,7 @@ for (int j=0; j < 1; j++){
 	for(int ei = 0; ei < plate_params.e; ei++){
 		for(int ui=0; ui<plate_params.u; ui++){
 		//	s[ei][ui] = models[ui][error_mic_to_input(node_id)];
-			s[ei][ui] = models[ui][num_errors[ei]];
+			s[ei][ui] = models[j][ui][num_errors[ei]];
 		}
 	}
 
