@@ -31,8 +31,19 @@
 
 unsigned long long shm_offset = 0x1000000;
 
-//static const char *dsp_device = "/dev/ds1104-0-mem";
+static const char *dsp_device[40]; // = "/dev/ds1104-0-mem";
 static const uint8_t *shm, *shm_save;
+
+struct fxlms_params
+{
+	double mu;
+	double zeta;
+	unsigned int u;
+	unsigned int e;
+	unsigned int x;
+	unsigned int n;
+	unsigned int m;
+};
 
 unsigned int *dsp_get_buffer(unsigned int seq)
 {
@@ -157,39 +168,48 @@ static unsigned int error_mic_to_input(unsigned int p)
 {
 	return (p << 3) + 3;
 }
-
-const float ***s;
-struct lf_ring ***r;
-static struct lf_ring x;
-static struct lf_ring feedback_ref[8];
-static const int un = 4;
-static const int xn = 1;
-static const int en = 1; //jeden ?
-
 #define REFERENCE_N		512
 #define SEC_FILTER_N 128
 #define FEEDBACK_N	64
 #define CONTROL_N	5
 #define REFERENCE_CHANNEL 0
 
+const float ***s;
+struct lf_ring ***r;
+static struct lf_ring x;
+static struct lf_ring feedback_ref[8];
+//static const int un = 4;
+//static const int xn = 1;
+//static const int en = 1; //jeden ?
+
+static struct fxlms_params plate_params = {
+	.u	= 4,
+	.e	= 9,
+	.x	= 1,
+	.m	= 128,
+	.n	= 128,
+	.mu	= 0.001,
+	.zeta	= 1e-6,
+};
+
 static double feedback_neutralization()
 {
 	unsigned int ui;
 	double f = 0;
 
-	for (ui = 0; ui < un; ui++)
+	for (ui = 0; ui < plate_params.u ; ui++)
 		f = lf_fir(&feedback_ref[ui], models[ui][REFERENCE_CHANNEL], FEEDBACK_N);
 	return f;
 }
 
 static void fxlms_initialize_r()
 {
-	r = malloc(xn * sizeof(*r));
-	for (int xi = 0; xi < xn; xi++) {
-		r[xi] = malloc(en * sizeof(**r));
-		for (int ei = 0; ei < en; ei++) {
-			r[xi][ei] = malloc(un * sizeof(***r));
-			for (int ui = 0; ui < un; ui++) {
+	r = malloc(plate_params.x * sizeof(*r));
+	for (int xi = 0; xi < plate_params.x; xi++) {
+		r[xi] = malloc(plate_params.e * sizeof(**r));
+		for (int ei = 0; ei < plate_params.e; ei++) {
+			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
+			for (int ui = 0; ui < plate_params.u; ui++) {
 				lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
 				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
 			}
@@ -197,24 +217,49 @@ static void fxlms_initialize_r()
 	}
 }	
 
+static double fxlms_normalize(const struct lf_ring ***r){
+	
+	unsigned int ui = 0;
+	unsigned int xi = 0;	
+	unsigned int i = 0;
+	double power = 0;
+
+	//TODO what should be in ei?
+	unsigned int ei = 0;
+	xi = 0;
+	do{
+		ui = 0;
+		do{
+			i = 0;
+			do{
+				float t = lf_ring_get(&r[xi][ei][ui], i);
+				power += t * t;
+			       i++;	
+			}while(i < plate_params.n);
+		}while(++ui<plate_params.u);
+	}while(++xi<plate_params.x);
+	return plate_params.mu / (power + plate_params.zeta);
+};	
+
+
 int main() {
 
 	//load_data_from_memory from all cards
 	float outputs[CONTROL_N][NUM_OUTPUTS];
 	float inputs[NUM_ALL_INPUTS];
-	char *devices[CONTROL_N] = {"/dev/ds1104-0-mem","/dev/ds1104-1-mem","/dev/ds1104-2-mem","/dev/ds1104-3-mem","/dev/ds1104-4-mem"};
 	
 	int16_t *dst;
 
 	for(int i=0; i < CONTROL_N; i++)
 	{
-		if(dsp_remap(DSP_RING_BASE, devices[i]));
+		snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
+		if(dsp_remap(DSP_RING_BASE,dsp_device));
  			printf(stderr, "cannot initialize DSP communication");
 	
-		dst = malloc(32);
-		copy_from_dsp(dst,devices[i]);
+		dst = malloc(4096);
+		copy_from_dsp(dst,dsp_device);
 		for(int j = 0; j < NUM_OUTPUTS; j++)
-		       outputs[i][j] = dst[NUM_INPUTS+j]/32768.0;	
+		     outputs[i][j] = dst[NUM_INPUTS+j]/32768.0;	
 		for(int j = 0; j < NUM_INPUTS; j++)
 			inputs[i * NUM_INPUTS + j] = dst[j]/32768.0;
 
@@ -234,8 +279,8 @@ int main() {
 			lf_ring_set_buffer(feedback_ref + i, NULL, 0);
 		}
 
-		//TODO distinguish outputs for different control cars
-		for (int i = 0; i < un; i++)
+		//TODO distinguish outputs from different control channels
+		for (int i = 0; i < plate_params.u; i++)
 			lf_ring_add(&feedback_ref[i], *outputs[i]);
 		
 		x_full -= feedback_neutralization();
@@ -249,15 +294,16 @@ for (int j=0; j < 1; j++){
 	node_id = j;
 	init_models();
 	//alokacja miejsca na model s path
-	s = malloc(en * sizeof(*s));
-	for (int ei = 0; ei < en; ei++)
-		s[ei] = malloc(un * sizeof(**s));
+	s = malloc(plate_params.e * sizeof(*s));
+	for (int ei = 0; ei < plate_params.e; ei++)
+		s[ei] = malloc(plate_params.u * sizeof(**s));
 
 	//set s from models
-	for(int ui=0; ui<un; ui++){
-		s[0][ui] = models[ui][error_mic_to_input(node_id)];
+	for(int ei = 0; ei < plate_params.e; ei++){
+		for(int ui=0; ui<plate_params.u; ui++){
+			s[ei][ui] = models[ui][error_mic_to_input(node_id)];
+		}
 	}
-
 	lf_ring_init(&x, REFERENCE_N);
 	lf_ring_set_buffer(&x, NULL, 0);
 	lf_ring_add(&x, x_full);
@@ -277,11 +323,14 @@ for (int j=0; j < 1; j++){
 				lf_ring_add(&r[xi][ei][ui], r_temp);
 				printf("%1.15lf\n",r_temp);
 				ui++;
-			} while (ui < un);
-		} while (++ei < en);
+			} while (ui < plate_params.u);
+		} while (++ei < plate_params.e);
 		xi++;
-	} while (xi < xn);
+	} while (xi < plate_params.x);
 }
+
+double mu = fxlms_normalize(r);
+printf("norm: %lf\n",mu );
 /**************************************************************************************************************************************/
 
 
