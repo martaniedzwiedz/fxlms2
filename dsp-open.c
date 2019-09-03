@@ -176,8 +176,8 @@ static unsigned int error_mic_to_input(unsigned int p)
 #define CONTROL_N		5
 #define REFERENCE_CHANNEL 	0
 
-const float ***s;
-struct lf_ring ***r;
+const float ****s;
+struct lf_ring ****r;
 struct lf_ring *e;
 static struct lf_ring x;
 static struct lf_ring feedback_ref[8];
@@ -205,16 +205,28 @@ static double feedback_neutralization(int node_id)
 
 static void fxlms_initialize_r()
 {
-	r = malloc(plate_params.x * sizeof(*r));
-	for (int xi = 0; xi < plate_params.x; xi++) {
-		r[xi] = malloc(plate_params.e * sizeof(**r));
-		for (int ei = 0; ei < plate_params.e; ei++) {
-			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
-			for (int ui = 0; ui < plate_params.u; ui++) {
-				lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
-				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
+	r = malloc(CONTROL_N * sizeof(*r));
+	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+		r[num_channels] = malloc(plate_params.x * sizeof(**r));
+		for (int xi = 0; xi < plate_params.x; xi++) {
+			r[xi] = malloc(plate_params.e * sizeof(***r));
+			for (int ei = 0; ei < plate_params.e; ei++) {
+				r[xi][ei] = malloc(plate_params.u * sizeof(****r));
+				for (int ui = 0; ui < plate_params.u; ui++) {
+					lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
+					lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
+				}
 			}
 		}
+	}
+}	
+static void fxlms_initialize_s()
+{
+	s = malloc(CONTROL_N * sizeof(*s));
+	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+	s[num_channels] = malloc(plate_params.e * sizeof(**s));
+	for (int ei = 0; ei < plate_params.e; ei++)
+		s[ei] = malloc(plate_params.u * sizeof(***s));
 	}
 }	
 
@@ -308,21 +320,15 @@ int main() {
 	}
 /*****************************************************FILTER REFERENCY WITH SECONDARY PATH MODEL*****************************************/
 
-for (int j=0; j < 1; j++){
-//for (int j=0; j < CONTROL_N; j++){}
+for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
-//	node_id = j;
-//	init_models();
 	//alokacja miejsca na model s path
-	s = malloc(plate_params.e * sizeof(*s));
-	for (int ei = 0; ei < plate_params.e; ei++)
-		s[ei] = malloc(plate_params.u * sizeof(**s));
+	fxlms_initialize_s();
 
 	//set s from models
 	for(int ei = 0; ei < plate_params.e; ei++){
-		for(int ui=0; ui<plate_params.u; ui++){
-		//	s[ei][ui] = models[ui][error_mic_to_input(node_id)];
-			s[ei][ui] = models[j][ui][num_errors[ei]];
+		for(int ui = 0; ui < plate_params.u; ui++){
+			s[num_channel][ei][ui] = models[num_channel][ui][num_errors[ei]];
 		}
 	}
 
@@ -342,7 +348,7 @@ for (int j=0; j < 1; j++){
 
 	//TODO replace 0 with next probes
 	for(int ei = 0; ei < plate_params.e; ei++ ){
-		printf("error: %lf\n ", inputs[num_errors[ei]]);
+		printf("error: %lf\n ", inputs[0][num_errors[ei]]);
 		lf_ring_add(&e[ei], inputs[0][num_errors[ei]]);
 	}
 	/////////////
@@ -355,8 +361,8 @@ for (int j=0; j < 1; j++){
 			do {
 				double r_temp;
 
-				r_temp = lf_fir(&x, s[ei][ui], SEC_FILTER_N);
-				lf_ring_add(&r[xi][ei][ui], r_temp);
+				r_temp = lf_fir(&x, s[num_channel][ei][ui], SEC_FILTER_N);
+				lf_ring_add(&r[num_channel][xi][ei][ui], r_temp);
 				printf("%1.15lf\n",r_temp);
 				ui++;
 			} while (ui < plate_params.u);
