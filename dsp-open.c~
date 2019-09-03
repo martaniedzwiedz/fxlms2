@@ -16,12 +16,13 @@
 #include "ring.c"
 #include "fir.c"
 
+
 #define DSP_RING_ENTRIES 0x18
 #define DSP_ALIGMENT 0x1000
-#define DSP_SAMPLE_SIZE 0x14
+#define DSP_SAMPLE_SIZE 0x20
 #define DSP_SEQNUM 0x08
 #define DSP_RING_BASE 0x1000
-#define DSP_PACKAGE_SIZE 0x1000
+#define DSP_PACKAGE_SIZE 0x2000
 #define NUM_ALL_INPUTS		40
 #define NUM_OUTPUTS		8
 #define NUM_INPUTS 		8
@@ -99,16 +100,16 @@ out:
 void show_data(int16_t *dst, unsigned int seq)
 {
 
-	//for(int i=0; i<128;i++)
-	//{
+	for(int i=0; i<128;i++)
+	{
 		printf("%d: ", seq);
 			for(int j=0; j<16 ; j++)
 			{	
-				double x = dst[16+j]/32768.0;
+				double x = dst[16*i+j]/32768.0;
 				printf("%f ",x);
 			}
 		printf("\n");
-	//}
+	}
 }
 
 static int dsp_begin(char *dsp_device)
@@ -130,13 +131,13 @@ static int dsp_begin(char *dsp_device)
 	return 0;
 }
 
-void copy_from_dsp(void * dst, char *dsp_device)
+void copy_from_dsp(void * dst, char *dsp_device, unsigned int dsp_seq)
 {
-	unsigned int dsp_seq;
+	//unsigned int dsp_seq;
 	int ret;
 
 	ret = dsp_begin(dsp_device);
-	dsp_seq = dsp_seqnum();
+	//dsp_seq = dsp_seqnum();
 	__copy_from_dsp(dsp_seq, dst );
 	show_data(dst, dsp_seq);
 }
@@ -169,10 +170,11 @@ static unsigned int error_mic_to_input(unsigned int p)
 	return (p << 3) + 3;
 }
 #define REFERENCE_N		512
-#define SEC_FILTER_N 128
-#define FEEDBACK_N	64
-#define CONTROL_N	5
-#define REFERENCE_CHANNEL 0
+#define SEC_FILTER_N		128
+#define ADAPTATION_FILTER_N 	256
+#define FEEDBACK_N		64
+#define CONTROL_N		5
+#define REFERENCE_CHANNEL 	0
 
 const float ***s;
 struct lf_ring ***r;
@@ -191,13 +193,13 @@ static struct fxlms_params plate_params = {
 };
 
 static int num_errors[9] = {1,2,3,9, 10, 11,19, 27, 35};
-static double feedback_neutralization()
+static double feedback_neutralization(int node_id)
 {
 	unsigned int ui;
 	double f = 0;
 
 	for (ui = 0; ui < plate_params.u ; ui++)
-		f = lf_fir(&feedback_ref[ui], models[ui][REFERENCE_CHANNEL], FEEDBACK_N);
+		f = lf_fir(&feedback_ref[ui], models[node_id][ui][REFERENCE_CHANNEL], FEEDBACK_N);
 	return f;
 }
 
@@ -243,58 +245,74 @@ static double fxlms_normalize(const struct lf_ring ***r){
 	return plate_params.mu / (power + plate_params.zeta);
 };	
 
+static int return_greater(int current, int next){
+	if(current > next)
+		return current;
+	else return next;
+}
 
 int main() {
 
 	//load_data_from_memory from all cards
-	float outputs[CONTROL_N][NUM_OUTPUTS];
-	float inputs[NUM_ALL_INPUTS];
+	float outputs[ADAPTATION_FILTER_N][CONTROL_N][NUM_OUTPUTS];
+	float inputs[ADAPTATION_FILTER_N][NUM_ALL_INPUTS];
 	
-	int16_t *dst;
+	int16_t *dst; 
 
+	int dsp_seq = 0;
+
+	for (int i = 0; i < CONTROL_N; i++){
+
+		snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
+		if(dsp_remap(DSP_RING_BASE, dsp_device));
+			printf(stderr, "cannot intialize DSP communication");
+		printf("seq: %d\n", dsp_seqnum());
+		dsp_seq = return_greater(dsp_seq, dsp_seqnum());
+
+	}
 	for(int i=0; i < CONTROL_N; i++)
 	{
 		snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
-		if(dsp_remap(DSP_RING_BASE,dsp_device));
- 			printf(stderr, "cannot initialize DSP communication");
-	
-		dst = malloc(4096);
-		copy_from_dsp(dst,dsp_device);
-		for(int j = 0; j < NUM_OUTPUTS; j++)
-		     outputs[i][j] = dst[NUM_INPUTS+j]/32768.0;	
-		for(int j = 0; j < NUM_INPUTS; j++)
-			inputs[i * NUM_INPUTS + j] = dst[j]/32768.0;
+		if(dsp_remap(DSP_RING_BASE, dsp_device));
+			printf(stderr, "cannot intialize DSP communication");
 
-	}
-	double x_full = inputs[REFERENCE_CHANNEL];
-
-
-/********************************************************FEEDBACK NEUTRALIZATION**********************************************************/
-	for(int j=0; j < CONTROL_N; j++){
-
-		//load data to models
-		node_id = j;
-		init_models();
-
-		for (int i = 0; i < 8; i++) {
-			lf_ring_init(feedback_ref + i, 256);
-			lf_ring_set_buffer(feedback_ref + i, NULL, 0);
+		dst = malloc(DSP_PACKAGE_SIZE);
+		copy_from_dsp(dst,dsp_device, dsp_seq - 2);
+		for(int in = 0; in < ADAPTATION_FILTER_N; in++){
+			for(int j = 0; j < NUM_OUTPUTS; j++)
+		     		outputs[in][i][j] = dst[DSP_SAMPLE_SIZE*in + NUM_INPUTS + j]/32768.0;	
+			for(int j = 0; j < NUM_INPUTS; j++)
+				inputs[in][i * NUM_INPUTS + j] = dst[DSP_SAMPLE_SIZE*in + j]/32768.0;
 		}
-
-		//TODO distinguish outputs from different control channels
-		for (int i = 0; i < plate_params.u; i++)
-			lf_ring_add(&feedback_ref[i], *outputs[i]);
-		
-		x_full -= feedback_neutralization();
 	}
+	double x_full[ADAPTATION_FILTER_N];
+	for(int in = 0; in < ADAPTATION_FILTER_N; in++){
+		x_full[in] =  inputs[in][REFERENCE_CHANNEL];
 
+		//load data to model
+		init_models();
+/********************************************************FEEDBACK NEUTRALIZATION**********************************************************/
+		for(int j=0; j < CONTROL_N; j++){
+	
+			for (int i = 0; i < 8; i++) {
+				lf_ring_init(feedback_ref + i, 256);
+				lf_ring_set_buffer(feedback_ref + i, NULL, 0);
+			}
+
+			//TODO replace 0 with next probes
+			for (int i = 0; i < plate_params.u; i++)
+				lf_ring_add(&feedback_ref[i], outputs[0][j][i]);
+		
+			x_full[in] -= feedback_neutralization(j);
+		}
+	}
 /*****************************************************FILTER REFERENCY WITH SECONDARY PATH MODEL*****************************************/
 
 for (int j=0; j < 1; j++){
 //for (int j=0; j < CONTROL_N; j++){}
 
-	node_id = j;
-	init_models();
+//	node_id = j;
+//	init_models();
 	//alokacja miejsca na model s path
 	s = malloc(plate_params.e * sizeof(*s));
 	for (int ei = 0; ei < plate_params.e; ei++)
@@ -304,14 +322,15 @@ for (int j=0; j < 1; j++){
 	for(int ei = 0; ei < plate_params.e; ei++){
 		for(int ui=0; ui<plate_params.u; ui++){
 		//	s[ei][ui] = models[ui][error_mic_to_input(node_id)];
-			s[ei][ui] = models[ui][num_errors[ei]];
+			s[ei][ui] = models[j][ui][num_errors[ei]];
 		}
 	}
 
 	//init x to lfir
 	lf_ring_init(&x, REFERENCE_N);
 	lf_ring_set_buffer(&x, NULL, 0);
-	lf_ring_add(&x, x_full);
+	//TODO replace 0 with next probes
+	lf_ring_add(&x, x_full[0]);
 
 	fxlms_initialize_r();
 	///////INIT AND LOAD E
