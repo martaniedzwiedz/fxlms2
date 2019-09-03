@@ -230,7 +230,7 @@ static void fxlms_initialize_s()
 	}
 }	
 
-static double fxlms_normalize(const struct lf_ring ***r, int num_channel){
+static double fxlms_normalize(const struct lf_ring ****r, int num_channel){
 	
 	unsigned int ui = 0;
 	unsigned int xi = 0;	
@@ -247,7 +247,7 @@ static double fxlms_normalize(const struct lf_ring ***r, int num_channel){
 			do{
 				i = 0;
 				do{
-					float t = lf_ring_get(&r[1][xi][ei][ui], i);
+					float t = lf_ring_get(&r[num_channel][xi][ei][ui], i);
 					power += t * t;
 			       		i++;	
 				}while(i < plate_params.n);
@@ -374,7 +374,7 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 
 	mu[num_channel] = fxlms_normalize(r, num_channel);
-	printf("norm: %lf\n",mu );
+	printf("norm: %lf\n",mu[num_channel] );
 
 }
 
