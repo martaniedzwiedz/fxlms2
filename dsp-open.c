@@ -100,7 +100,7 @@ out:
 void show_data(int16_t *dst, unsigned int seq)
 {
 
-	for(int i=0; i<128;i++)
+	for(int i=0; i<256;i++)
 	{
 		printf("%d: ", seq);
 			for(int j=0; j<16 ; j++)
@@ -209,12 +209,12 @@ static void fxlms_initialize_r()
 	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
 		r[num_channels] = malloc(plate_params.x * sizeof(**r));
 		for (int xi = 0; xi < plate_params.x; xi++) {
-			r[xi] = malloc(plate_params.e * sizeof(***r));
+			r[num_channels][xi] = malloc(plate_params.e * sizeof(***r));
 			for (int ei = 0; ei < plate_params.e; ei++) {
-				r[xi][ei] = malloc(plate_params.u * sizeof(****r));
+				r[num_channels][xi][ei] = malloc(plate_params.u * sizeof(****r));
 				for (int ui = 0; ui < plate_params.u; ui++) {
-					lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
-					lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
+					lf_ring_init(&r[num_channels][xi][ei][ui], SEC_FILTER_N);
+					lf_ring_set_buffer(&r[num_channels][xi][ei][ui], NULL, 0);
 				}
 			}
 		}
@@ -226,11 +226,11 @@ static void fxlms_initialize_s()
 	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
 	s[num_channels] = malloc(plate_params.e * sizeof(**s));
 	for (int ei = 0; ei < plate_params.e; ei++)
-		s[ei] = malloc(plate_params.u * sizeof(***s));
+		s[num_channels][ei] = malloc(plate_params.u * sizeof(***s));
 	}
 }	
 
-static double fxlms_normalize(const struct lf_ring ***r){
+static double fxlms_normalize(const struct lf_ring ***r, int num_channel){
 	
 	unsigned int ui = 0;
 	unsigned int xi = 0;	
@@ -247,13 +247,13 @@ static double fxlms_normalize(const struct lf_ring ***r){
 			do{
 				i = 0;
 				do{
-					float t = lf_ring_get(&r[xi][ei][ui], i);
+					float t = lf_ring_get(&r[1][xi][ei][ui], i);
 					power += t * t;
 			       		i++;	
 				}while(i < plate_params.n);
 			}while(++ui < plate_params.u);
 		}while(++xi < plate_params.x);
-	}while(++ei < 2);
+	}while(++ei < plate_params.e);
 	return plate_params.mu / (power + plate_params.zeta);
 };	
 
@@ -320,6 +320,7 @@ int main() {
 	}
 /*****************************************************FILTER REFERENCY WITH SECONDARY PATH MODEL*****************************************/
 
+double mu[CONTROL_N];
 for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 	//alokacja miejsca na model s path
@@ -371,10 +372,13 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 	} while (xi < plate_params.x);
 
 
+
+	mu[num_channel] = fxlms_normalize(r, num_channel);
+	printf("norm: %lf\n",mu );
+
 }
 
-double mu = fxlms_normalize(r);
-printf("norm: %lf\n",mu );
+
 /**************************************************************************************************************************************/
 
 
