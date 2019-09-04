@@ -179,6 +179,7 @@ static unsigned int error_mic_to_input(unsigned int p)
 
 const float ****s;
 struct lf_ring ****r;
+struct lf_ring ****w;
 struct lf_ring *e;
 static struct lf_ring x;
 static struct lf_ring feedback_ref[8];
@@ -231,6 +232,24 @@ static void fxlms_initialize_s()
 	}
 }	
 
+static void fxlms_initialize_w()
+{
+	w = malloc(CONTROL_N * sizeof(*w));
+	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+		w[num_channels] = malloc(plate_params.x * sizeof(**w));
+		for (int xi = 0; xi < plate_params.x; xi++) {
+			w[num_channels][xi] = malloc(plate_params.e * sizeof(***w));
+			for (int ei = 0; ei < plate_params.e; ei++) {
+				w[num_channels][xi][ei] = malloc(plate_params.u * sizeof(****w));
+				for (int ui = 0; ui < plate_params.u; ui++) {
+					lf_ring_init(&w[num_channels][xi][ei][ui], SEC_FILTER_N);
+					lf_ring_set_buffer(&w[num_channels][xi][ei][ui], NULL, 0);
+				}
+			}
+		}
+	}
+}	
+
 static double fxlms_normalize(const struct lf_ring ****r, int num_channel){
 	
 	unsigned int ui = 0;
@@ -262,6 +281,25 @@ static int return_greater(int current, int next){
 	if(current > next)
 		return current;
 	else return next;
+}
+
+void prepare_ref(complex *r_com, const struct lf_ring *r){
+	for (int i = 0; i < r->n; i++){
+		r_com[i]  = r->x[r->n - i];
+	}
+}
+
+void prepare_err(complex *e_com, const struct lf_ring *e){
+	for (int i = 0; i < (e->n)/2; i++){
+		e_com[i]  = e->x[e->n - i];
+		e_com[((e->n)/2)+i] = 0.0;
+	}
+}
+
+complex calculate_alfa(complex *e_com, complex *r_com, complex *alfa){
+	for(int i = 0; i < 256; i++){
+		alfa[i] = conj(r_com[i]) * e_com[i];
+	}
 }
 
 int main() {
@@ -322,6 +360,10 @@ int main() {
 /*****************************************************FILTER REFERENCY WITH SECONDARY PATH MODEL*****************************************/
 
 double mu[CONTROL_N];
+
+//can't be clean after new probe
+fxlms_initialize_w();
+
 for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 	//alokacja miejsca na model s path
@@ -362,7 +404,7 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 			int ui = 0;
 			do {
 				double r_temp;
-
+				//TODO remove [num_channel] dim?
 				r_temp = lf_fir(&x, s[num_channel][ei][ui], SEC_FILTER_N);
 				lf_ring_add(&r[num_channel][xi][ei][ui], r_temp);
 				printf("%1.15lf\n",r_temp);
@@ -375,10 +417,41 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 
 	mu[num_channel] = fxlms_normalize(r, num_channel);
-	printf("norm: %lf\n",mu[num_channel] );
+	printf("norm: %lf\n",mu[num_channel]);
+
+	complex alfa[256], e_com[256], r_com[256];
+	//TODO clean the tables?
+	unsigned int xxi = 0;
+	do
+	{
+		unsigned int eei = 0;
+		do
+		{
+			prepare_err(e_com,&e[eei]);
+			fft(e_com,256);
+			unsigned int uui = 0;
+			do
+			{
+				prepare_ref(r_com, &r[xxi][eei][uui]);
+				fft(r_com, 256);
+				calculate_alfa(e_com, r_com, alfa);
+				ifft(alfa,256);
+				int i = 0;
+				do{
+					double w_temp = lf_ring_get(&w[num_channel][xxi][eei][uui], i) - mu[num_channel] * creal(alfa[i]);
+					//TODO check where this value is added?
+					lf_ring_add(&w[num_channel][xxi][eei][uui], w_temp);
+				}while(++i < 256);
+				uui++;
+			} while (uui < plate_params.u);
+		} while (eei++ < plate_params.e);
+	xxi++;
+	} while (xxi < plate_params.x);
+	
+	
+
 
 }
-
 
 /**************************************************************************************************************************************/
 
