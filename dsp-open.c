@@ -458,16 +458,36 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 /*******************************************WRITE DATA - SHARED MEMORY ********************************************************/
 
-// int8_t *dst_toio;
-// int8_t *dst;
-// dst_toio = malloc(256);
-// dst = malloc(256);
-// memset(dst_toio, 3, 256);
-// send_to_dsp(dst_toio);
+int8_t *dst_toio;
+int8_t *dst_test;
+dst_toio = malloc(128 * 9 * 4) ;
+dst_test = malloc(128 * 9 * 4);
+int8_t *w_to_dst;
+w_to_dst = malloc(128 * 9 * 4);
 
-// memcpy_fromio(dst, shm_save, DSP_WEIGHT_PACKAGE_SIZE);
+
+for(int wnci = 0; wnci < CONTROL_N; wnci ++){
+	int next = 0;
+	for(int wei = 0; wei < plate_params.e; wei ++){
+		for(int wui = 0; wui < plate_params.u; wui ++){
+			for(int wi = 0; wi < plate_params.n; wi ++){
+				w_to_dst[next] = lf_ring_get(&w[wnci][0][wei][wui], wi) * 32768;
+				next ++;
+			}
+		}
+	}
+	memset(dst_toio, w_to_dst, 128 * 9 * 4);
+	snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", wnci);
+	send_to_dsp(dst_toio, dsp_device);
+	free(dst_toio);
+}
+
+// memset(dst_toio, w_to_dst, 128 * 9 * 4 * 5);
+// send_to_dsp(dst_toio, "/dev/ds1104-0-mem");
+
+// memcpy_fromio(dst_test, shm_save, DSP_WEIGHT_PACKAGE_SIZE);
 // 	for(int i =0; i< 12; i++)
-// 		printf("%d\n", dst[i]);
+// 		printf("%d\n", dst_test[i]);
 
 /**************************************************************************************************************************************/
 
