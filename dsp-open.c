@@ -15,6 +15,7 @@
 #include "models-init.h"
 #include "ring.c"
 #include "fir.c"
+#include "fft.c"
 
 
 #define DSP_RING_ENTRIES 0x18
