@@ -182,7 +182,7 @@ static unsigned int error_mic_to_input(unsigned int p)
 #define REFERENCE_CHANNEL 	0
 
 const float ****s;
-const float ****w;
+struct lf_ring ****w;
 struct lf_ring ***r;
 struct lf_ring *e;
 static struct lf_ring x[256];
@@ -315,8 +315,8 @@ void prepare_ref(complex *r_com, const struct lf_ring *r){
 
 void prepare_err(complex *e_com, const struct lf_ring *e){
 	for (int i = 0; i < (e->n)/2; i++){
-		e_com[i]  = e->x[e->n - i];
-		e_com[((e->n)/2)+i] = 0.0;
+//		e_com[i]  = e->x[e->n - i];
+//		e_com[((e->n)/2)+i] = 0.0;
 	}
 }
 
@@ -451,19 +451,19 @@ for (int num_channel = 0; num_channel < 5; num_channel++){
 		do
 		{
 			prepare_err(e_com,&e[eei]);
-			fft(e_com,256);
+//			fft(e_com,256);
 			unsigned int uui = 0;
 			do
 			{
-				prepare_ref(r_com, &r[xxi][eei][uui]);
-				fft(r_com, 256);
-				calculate_alfa(e_com, r_com, alfa);
-				ifft(alfa,256);
+	//			prepare_ref(r_com, &r[xxi][eei][uui]);
+	//			fft(r_com, 256);
+	//			calculate_alfa(e_com, r_com, alfa);
+	//			ifft(alfa,256);
 				int i = 0;
 				do{
-					double w_temp = lf_ring_get(&w[num_channel][xxi][eei], i) - mu[num_channel] * creal(alfa[i]);
+		//			double w_temp = lf_ring_get(&w[num_channel][xxi][eei][uui], i) - mu[num_channel] * creal(alfa[i]);
 					//TODO check where this value is added?
-			//		lf_ring_add(&w[num_channel][xxi][eei][uui], w_temp);
+		//			lf_ring_add(&w[num_channel][xxi][eei][uui], w_temp);
 				}while(++i < 256);
 				uui++;
 			} while (uui < plate_params.u);
