@@ -182,6 +182,7 @@ static unsigned int error_mic_to_input(unsigned int p)
 #define REFERENCE_CHANNEL 	0
 
 const float ****s;
+const float ****w;
 struct lf_ring ***r;
 struct lf_ring *e;
 static struct lf_ring x[256];
@@ -255,7 +256,6 @@ static void fxlms_initialize_e(){
 	}
 }
 
-static double fxlms_normalize(const struct lf_ring ***r){
 static void fxlms_initialize_w()
 {
 	w = malloc(CONTROL_N * sizeof(*w));
@@ -274,7 +274,7 @@ static void fxlms_initialize_w()
 	}
 }
 
-static double fxlms_normalize(const struct lf_ring ****r, int num_channel){
+static double fxlms_normalize(const struct lf_ring ***r){
 
 	unsigned int ui = 0;
 	unsigned int xi = 0;	
@@ -393,13 +393,9 @@ double mu[CONTROL_N];
 	fxlms_initialize_s();
 
 
-
-for (int num_channel = 0; num_channel < 5; num_channel++){
-
-//can't be clean after new probe
 fxlms_initialize_w();
 
-for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
+for (int num_channel = 0; num_channel < 5; num_channel++){
 
 	//alokacja miejsca na model s path
         fxlms_initialize_r();
@@ -467,7 +463,7 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 				do{
 					double w_temp = lf_ring_get(&w[num_channel][xxi][eei][uui], i) - mu[num_channel] * creal(alfa[i]);
 					//TODO check where this value is added?
-					lf_ring_add(&w[num_channel][xxi][eei][uui], w_temp);
+			//		lf_ring_add(&w[num_channel][xxi][eei][uui], w_temp);
 				}while(++i < 256);
 				uui++;
 			} while (uui < plate_params.u);
@@ -485,7 +481,7 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 /*******************************************WRITE DATA - SHARED MEMORY ********************************************************/
 
-int8_t *dst_toio;
+/*int8_t *dst_toio;
 int8_t *dst_test;
 dst_toio = malloc(128 * 9 * 4) ;
 dst_test = malloc(128 * 9 * 4);
@@ -507,7 +503,7 @@ for(int wnci = 0; wnci < CONTROL_N; wnci ++){
 	snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", wnci);
 	send_to_dsp(dst_toio, dsp_device);
 	free(dst_toio);
-}
+}*/
 
 // memset(dst_toio, w_to_dst, 128 * 9 * 4 * 5);
 // send_to_dsp(dst_toio, "/dev/ds1104-0-mem");
