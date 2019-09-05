@@ -15,6 +15,7 @@
 #include "models-init.h"
 #include "ring.c"
 #include "fir.c"
+#include "fft.c"
 
 
 #define DSP_RING_ENTRIES 0x18
@@ -220,7 +221,7 @@ static void fxlms_initialize_r()
 			}
 		}
 	}
- 
+
 /*	r = malloc(CONTROL_N * sizeof(*r));
 	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
 		r[num_channels] = malloc(plate_params.x * sizeof(**r));
@@ -255,14 +256,33 @@ static void fxlms_initialize_e(){
 }
 
 static double fxlms_normalize(const struct lf_ring ***r){
-	
+static void fxlms_initialize_w()
+{
+	w = malloc(CONTROL_N * sizeof(*w));
+	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+		w[num_channels] = malloc(plate_params.x * sizeof(**w));
+		for (int xi = 0; xi < plate_params.x; xi++) {
+			w[num_channels][xi] = malloc(plate_params.e * sizeof(***w));
+			for (int ei = 0; ei < plate_params.e; ei++) {
+				w[num_channels][xi][ei] = malloc(plate_params.u * sizeof(****w));
+				for (int ui = 0; ui < plate_params.u; ui++) {
+					lf_ring_init(&w[num_channels][xi][ei][ui], SEC_FILTER_N);
+					lf_ring_set_buffer(&w[num_channels][xi][ei][ui], NULL, 0);
+				}
+			}
+		}
+	}
+}
+
+static double fxlms_normalize(const struct lf_ring ****r, int num_channel){
+
 	unsigned int ui = 0;
 	unsigned int xi = 0;	
 	//unsigned int i = 0;
 	float power = 0;
 
 	unsigned int ei = 0;
-	
+
 	for(int i = 0; i<256; i++){
 		xi = 0;
 		do{
@@ -270,21 +290,40 @@ static double fxlms_normalize(const struct lf_ring ***r){
 			do{
 				ui = 0;
 				do{
-					
+
 				float t = lf_ring_get(&r[xi][ei][ui], i);
 				power += t * t;
 
 				} while(++ui < plate_params.u);
 			} while(++ei < plate_params.e);
 		} while(++xi < plate_params.x);
-	} 
+	}
 	return plate_params.mu / (power + plate_params.zeta);
-}	
+}
 
 static int return_greater(int current, int next){
 	if(current > next)
 		return current;
 	else return next;
+}
+
+void prepare_ref(complex *r_com, const struct lf_ring *r){
+	for (int i = 0; i < r->n; i++){
+		r_com[i]  = r->x[r->n - i];
+	}
+}
+
+void prepare_err(complex *e_com, const struct lf_ring *e){
+	for (int i = 0; i < (e->n)/2; i++){
+		e_com[i]  = e->x[e->n - i];
+		e_com[((e->n)/2)+i] = 0.0;
+	}
+}
+
+complex calculate_alfa(complex *e_com, complex *r_com, complex *alfa){
+	for(int i = 0; i < 256; i++){
+		alfa[i] = conj(r_com[i]) * e_com[i];
+	}
 }
 
 int main() {
@@ -293,7 +332,7 @@ int main() {
 	float outputs[ADAPTATION_FILTER_N][CONTROL_N][NUM_OUTPUTS];
 	float inputs[ADAPTATION_FILTER_N][NUM_ALL_INPUTS];
 	float adc_scaler=1.0 / (32678.0 * ADC_FILTER_GAIN);
-	
+
 	int16_t *dst; 
 
 	int dsp_seq = 0;
@@ -318,7 +357,7 @@ int main() {
 		for(int in = 0; in <256; in++){
 
 			for(int j = 0; j < NUM_OUTPUTS; j++)
-		     		outputs[in][i][j] = dst[16*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);	
+		     		outputs[in][i][j] = dst[16*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);
 			for(int j = 0; j < NUM_INPUTS; j++)
 				inputs[in][i * NUM_INPUTS + j] = dst[16*in + j]/adc_scaler;
 
@@ -327,11 +366,11 @@ int main() {
 	init_models();
 
 	double x_full[ADAPTATION_FILTER_N];
-	
+
 	for(int in = 0; in < 256; in++){
-		
+
 		for(int j=0; j < CONTROL_N; j++){
-		
+
 			x_full[in] =  inputs[in][REFERENCE_CHANNEL];
 	/*******************************************************FEEDBACK NEUTRALIZATION**********************************************************/
 			for (int i = 0; i < 8; i++) {
@@ -353,9 +392,14 @@ double mu[CONTROL_N];
 	fxlms_initialize_e();
 	fxlms_initialize_s();
 
-	
-	
+
+
 for (int num_channel = 0; num_channel < 5; num_channel++){
+
+//can't be clean after new probe
+fxlms_initialize_w();
+
+for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 	//alokacja miejsca na model s path
         fxlms_initialize_r();
@@ -402,24 +446,75 @@ for (int num_channel = 0; num_channel < 5; num_channel++){
 	mu[num_channel] = fxlms_normalize(r);
 	printf("norm: %1.25lf\n",mu[num_channel] );
 
-}
+	complex alfa[256], e_com[256], r_com[256];
+	//TODO clean the tables?
+	unsigned int xxi = 0;
+	do
+	{
+		unsigned int eei = 0;
+		do
+		{
+			prepare_err(e_com,&e[eei]);
+			fft(e_com,256);
+			unsigned int uui = 0;
+			do
+			{
+				prepare_ref(r_com, &r[xxi][eei][uui]);
+				fft(r_com, 256);
+				calculate_alfa(e_com, r_com, alfa);
+				ifft(alfa,256);
+				int i = 0;
+				do{
+					double w_temp = lf_ring_get(&w[num_channel][xxi][eei][uui], i) - mu[num_channel] * creal(alfa[i]);
+					//TODO check where this value is added?
+					lf_ring_add(&w[num_channel][xxi][eei][uui], w_temp);
+				}while(++i < 256);
+				uui++;
+			} while (uui < plate_params.u);
+		} while (eei++ < plate_params.e);
+	xxi++;
+	} while (xxi < plate_params.x);
 
+
+
+
+}
 
 /**************************************************************************************************************************************/
 
 
 /*******************************************WRITE DATA - SHARED MEMORY ********************************************************/
 
-// int8_t *dst_toio;
-// int8_t *dst;
-// dst_toio = malloc(256);
-// dst = malloc(256);
-// memset(dst_toio, 3, 256);
-// send_to_dsp(dst_toio);
+int8_t *dst_toio;
+int8_t *dst_test;
+dst_toio = malloc(128 * 9 * 4) ;
+dst_test = malloc(128 * 9 * 4);
+int8_t *w_to_dst;
+w_to_dst = malloc(128 * 9 * 4);
 
-// memcpy_fromio(dst, shm_save, DSP_WEIGHT_PACKAGE_SIZE);
+
+for(int wnci = 0; wnci < CONTROL_N; wnci ++){
+	int next = 0;
+	for(int wei = 0; wei < plate_params.e; wei ++){
+		for(int wui = 0; wui < plate_params.u; wui ++){
+			for(int wi = 0; wi < plate_params.n; wi ++){
+				w_to_dst[next] = lf_ring_get(&w[wnci][0][wei][wui], wi) * 32768;
+				next ++;
+			}
+		}
+	}
+	memset(dst_toio, w_to_dst, 128 * 9 * 4);
+	snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", wnci);
+	send_to_dsp(dst_toio, dsp_device);
+	free(dst_toio);
+}
+
+// memset(dst_toio, w_to_dst, 128 * 9 * 4 * 5);
+// send_to_dsp(dst_toio, "/dev/ds1104-0-mem");
+
+// memcpy_fromio(dst_test, shm_save, DSP_WEIGHT_PACKAGE_SIZE);
 // 	for(int i =0; i< 12; i++)
-// 		printf("%d\n", dst[i]);
+// 		printf("%d\n", dst_test[i]);
 
 /**************************************************************************************************************************************/
 
