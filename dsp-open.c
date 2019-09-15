@@ -28,7 +28,7 @@
 #define NUM_OUTPUTS		8
 #define NUM_INPUTS 		8
 
-#define DSP_WEIGHT_PACKAGE_SIZE 0X100
+#define DSP_WEIGHT_PACKAGE_SIZE 128*4*2
 #define DSP_WEIGHT_OFFSET 0X500
 #define DAC_MAX_OUTPUT 0.65
 #define DAC_GAIN (30.0/32*10)
@@ -36,8 +36,9 @@
 
 unsigned long long shm_offset = 0x1000000;
 
-static const char *dsp_device[40]; // = "/dev/ds1104-0-mem";
+static const char *dsp_device[40]; 
 static const uint8_t *shm, *shm_save;
+static unsigned int ring_entries;
 
 struct fxlms_params
 {
@@ -53,6 +54,7 @@ struct fxlms_params
 unsigned int *dsp_get_buffer(unsigned int seq)
 {
 	unsigned long offset;
+	seq %= ring_entries;
 	offset = seq * DSP_ALIGMENT;
 	return shm + DSP_RING_BASE + offset;
 }
@@ -138,11 +140,9 @@ static int dsp_begin(char *dsp_device)
 
 void copy_from_dsp(void * dst, char *dsp_device, unsigned int dsp_seq)
 {
-	//unsigned int dsp_seq;
 	int ret;
 
 	ret = dsp_begin(dsp_device);
-	//dsp_seq = dsp_seqnum();
 	__copy_from_dsp(dsp_seq, dst );
 	show_data(dst, dsp_seq);
 }
@@ -167,22 +167,19 @@ void send_to_dsp(int8_t *dst, char *dsp_device)
 
 	shm_save = filty;
 
-	memcpy_toio(filty, dst, DSP_WEIGHT_PACKAGE_SIZE);
+	writel(256, filty);
+	writel(4, filty + 0x04);	
+	memcpy_toio(filty + 0x20, dst, DSP_WEIGHT_PACKAGE_SIZE);
 }
 
-static unsigned int error_mic_to_input(unsigned int p)
-{
-	return (p << 3) + 3;
-}
 #define REFERENCE_N		512
 #define SEC_FILTER_N		128
 #define ADAPTATION_FILTER_N 	256
 #define FEEDBACK_N		64
-#define CONTROL_N		5
+#define CONTROL_N		5	
 #define REFERENCE_CHANNEL 	0
 
 const float ****s;
-struct lf_ring ****w;
 struct lf_ring ***r;
 struct lf_ring *e;
 static struct lf_ring x[256];
@@ -222,22 +219,8 @@ static void fxlms_initialize_r()
 			}
 		}
 	}
+}
 
-/*	r = malloc(CONTROL_N * sizeof(*r));
-	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
-		r[num_channels] = malloc(plate_params.x * sizeof(**r));
-		for (int xi = 0; xi < plate_params.x; xi++) {
-			r[num_channels][xi] = malloc(plate_params.e * sizeof(***r));
-			for (int ei = 0; ei < plate_params.e; ei++) {
-				r[num_channels][xi][ei] = malloc(plate_params.u * sizeof(****r));
-				for (int ui = 0; ui < plate_params.u; ui++) {
-					lf_ring_init(&r[num_channels][xi][ei][ui], SEC_FILTER_N);
-					lf_ring_set_buffer(&r[num_channels][xi][ei][ui], NULL, 0);
-				}
-			}
-		}
-	}*/
-}	
 static void fxlms_initialize_s()
 {
 	s = malloc(CONTROL_N * sizeof(*s));
@@ -256,29 +239,28 @@ static void fxlms_initialize_e(){
 	}
 }
 
-static void fxlms_initialize_w()
-{
-	w = malloc(CONTROL_N * sizeof(*w));
-	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
-		w[num_channels] = malloc(plate_params.x * sizeof(**w));
-		for (int xi = 0; xi < plate_params.x; xi++) {
-			w[num_channels][xi] = malloc(plate_params.e * sizeof(***w));
-			for (int ei = 0; ei < plate_params.e; ei++) {
-				w[num_channels][xi][ei] = malloc(plate_params.u * sizeof(****w));
-				for (int ui = 0; ui < plate_params.u; ui++) {
-					lf_ring_init(&w[num_channels][xi][ei][ui], SEC_FILTER_N);
-					lf_ring_set_buffer(&w[num_channels][xi][ei][ui], NULL, 0);
-				}
-			}
-		}
-	}
-}
+//static void fxlms_initialize_w()
+//{
+//	w = malloc(CONTROL_N * sizeof(*w));
+//	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+//		w[num_channels] = malloc(plate_params.x * sizeof(**w));
+//		for (int xi = 0; xi < plate_params.x; xi++) {
+//			w[num_channels][xi] = malloc(plate_params.e * sizeof(***w));
+//			for (int ei = 0; ei < plate_params.e; ei++) {
+//				w[num_channels][xi][ei] = malloc(plate_params.u * sizeof(****w));
+//				for (int ui = 0; ui < plate_params.u; ui++) {
+//					lf_ring_init(&w[num_channels][xi][ei][ui], SEC_FILTER_N);
+//					lf_ring_set_buffer(&w[num_channels][xi][ei][ui], NULL, 0);
+//				}
+//			}
+//		}
+//	}
+//}
 
 static double fxlms_normalize(const struct lf_ring ***r){
 
 	unsigned int ui = 0;
 	unsigned int xi = 0;	
-	//unsigned int i = 0;
 	float power = 0;
 
 	unsigned int ei = 0;
@@ -332,7 +314,11 @@ int main() {
 	float outputs[ADAPTATION_FILTER_N][CONTROL_N][NUM_OUTPUTS];
 	float inputs[ADAPTATION_FILTER_N][NUM_ALL_INPUTS];
 	float adc_scaler=1.0 / (32678.0 * ADC_FILTER_GAIN);
+	
+	float w[CONTROL_N][plate_params.u][128];
 
+	
+	for(int z = 0; z< 1; z++){
 	int16_t *dst; 
 
 	int dsp_seq = 0;
@@ -343,8 +329,8 @@ int main() {
 		if(dsp_remap(DSP_RING_BASE, dsp_device));
 			printf(stderr, "cannot intialize DSP communication");
 		printf("seq: %d\n", dsp_seqnum());
-		dsp_seq = return_greater(dsp_seq, dsp_seqnum());
-
+		dsp_seq = return_greater(dsp_seq, dsp_seqnum());		
+		ring_entries = readl(shm + DSP_RING_ENTRIES);
 	}
 	for(int i=0; i < CONTROL_N; i++)
 	{
@@ -357,11 +343,12 @@ int main() {
 		for(int in = 0; in <256; in++){
 
 			for(int j = 0; j < NUM_OUTPUTS; j++)
-		     		outputs[in][i][j] = dst[16*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);
+		     			outputs[in][i][j] = dst[16*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);
+			
 			for(int j = 0; j < NUM_INPUTS; j++)
-				inputs[in][i * NUM_INPUTS + j] = dst[16*in + j]/adc_scaler;
-
-		}
+				inputs[in][i * NUM_INPUTS + j] = dst[16*in + j] * adc_scaler;
+				
+			}
 	}
 	init_models();
 
@@ -388,14 +375,11 @@ int main() {
 
 double mu[CONTROL_N];
 
-//fxlms_initialize_r();
 	fxlms_initialize_e();
 	fxlms_initialize_s();
+//	fxlms_initialize_w();
 
-
-fxlms_initialize_w();
-
-for (int num_channel = 0; num_channel < 5; num_channel++){
+for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 	//alokacja miejsca na model s path
         fxlms_initialize_r();
@@ -415,7 +399,7 @@ for (int num_channel = 0; num_channel < 5; num_channel++){
 
 	for(int sample=0; sample < 256; sample++){
 		lf_ring_add(&x[sample], x_full[sample]);
-		//printf("%lf\n", x_full[sample]);
+		
 		for(int ei = 0; ei < plate_params.e; ei++ ){
 			lf_ring_add(&e[ei], inputs[sample][num_errors[ei]]);
 		}
@@ -443,7 +427,7 @@ for (int num_channel = 0; num_channel < 5; num_channel++){
 	printf("norm: %1.25lf\n",mu[num_channel] );
 
 	complex alfa[256], e_com[256], r_com[256];
-	//TODO clean the tables?
+
 	unsigned int xxi = 0;
 	do
 	{
@@ -459,23 +443,17 @@ for (int num_channel = 0; num_channel < 5; num_channel++){
 				fft(r_com, 256);
 				calculate_alfa(e_com, r_com, alfa);
 				ifft(alfa,256);
-				int i = 0;
-				do{
-				double w_temp = lf_ring_get(&w[num_channel][xxi][eei][uui], i) - mu[num_channel] * creal(alfa[i]);
-					//TODO check where this value is added?
-				printf("%lf ", w_temp);
-				lf_ring_add(&w[num_channel][xxi][eei][uui], w_temp);
-				}while(++i < 256);
-				printf("\n");
+				for(int i = 0; i < 128; i++){
+
+					w[num_channel][uui][i] = w[num_channel][uui][i] - mu[num_channel] * creal(alfa[i]);
+					//printf("%f ", w[num_channel][uui][i]);
+				}
+			//	printf("\n");
 				uui++;
 			} while (uui < plate_params.u);
 		} while (++eei < plate_params.e);
 	xxi++;
 	} while (xxi < plate_params.x);
-
-
-
-
 }
 
 /**************************************************************************************************************************************/
@@ -483,36 +461,44 @@ for (int num_channel = 0; num_channel < 5; num_channel++){
 
 /*******************************************WRITE DATA - SHARED MEMORY ********************************************************/
 
-/*int8_t *dst_toio;
-int8_t *dst_test;
-dst_toio = malloc(128 * 9 * 4) ;
-dst_test = malloc(128 * 9 * 4);
-int8_t *w_to_dst;
-w_to_dst = malloc(128 * 9 * 4);
+
+int16_t *dst_test;
+dst_test = malloc(128*4*2);
+int16_t *w_to_dst;
+w_to_dst = malloc(128*4*2);
 
 
-for(int wnci = 0; wnci < CONTROL_N; wnci ++){
-	int next = 0;
-	for(int wei = 0; wei < plate_params.e; wei ++){
+
+for(int num_chan = 0; num_chan < 1; num_chan++){
+	for(int wnci = 0; wnci < 1; wnci ++){
+		int next = 0;
 		for(int wui = 0; wui < plate_params.u; wui ++){
-			for(int wi = 0; wi < plate_params.n; wi ++){
-				w_to_dst[next] = lf_ring_get(&w[wnci][0][wei][wui], wi) * 32768;
-				next ++;
-			}
+				for(int wi = 0; wi < plate_params.n; wi ++){
+					w_to_dst[next] = w[num_chan][wui][wi] * 327680;
+					//printf("%d ", w_to_dst[next]);
+					next ++;
+				}
 		}
 	}
-	memset(dst_toio, w_to_dst, 128 * 9 * 4);
-	snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", wnci);
-	send_to_dsp(dst_toio, dsp_device);
-	free(dst_toio);
-}*/
+	snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", 0);
+	send_to_dsp(w_to_dst, dsp_device);
+}
 
-// memset(dst_toio, w_to_dst, 128 * 9 * 4 * 5);
-// send_to_dsp(dst_toio, "/dev/ds1104-0-mem");
+//uint16_t x = readl(shm_save);
 
-// memcpy_fromio(dst_test, shm_save, DSP_WEIGHT_PACKAGE_SIZE);
-// 	for(int i =0; i< 12; i++)
-// 		printf("%d\n", dst_test[i]);
+//printf("TEST ILOSC: %d", x);
+
+//uint16_t y = readl(shm_save + 0x04);
+
+//printf("TEST STEROWANIA: %d", y);
+
+//memcpy_fromio(dst_test, shm_save, 128 * 4 * 2);
+
+//for(int k = 0; k < 128 * 4; k++){
+//	printf("%f ", dst_test[k]/327680.0);
+//}
+
+}
 
 /**************************************************************************************************************************************/
 
