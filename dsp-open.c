@@ -17,40 +17,19 @@
 #include "fir.c"
 #include "fft.c"
 #include "pu-shm.c"
+#include "fxlms.c"
 
 
-//#define DSP_RING_ENTRIES 0x18
-//#define DSP_ALIGMENT 0x1000
-//#define DSP_SAMPLE_SIZE 0x20
-//#define DSP_SEQNUM 0x08
-//#define DSP_RING_BASE 0x1000
-//#define DSP_PACKAGE_SIZE 0x2000
 #define NUM_ALL_INPUTS		40
 #define NUM_OUTPUTS		8
 #define NUM_INPUTS 		8
 
-//#define DSP_WEIGHT_PACKAGE_SIZE 128*4*2
-//#define DSP_WEIGHT_OFFSET 0X500
 #define DAC_MAX_OUTPUT 0.65
 #define DAC_GAIN (30.0/32*10)
 #define ADC_FILTER_GAIN (30.0/32)
 
 
 static const char *dsp_device[40]; 
-
-//static unsigned int ring_entries;
-
-struct fxlms_params
-{
-	double mu;
-	double zeta;
-	unsigned int u;
-	unsigned int e;
-	unsigned int x;
-	unsigned int n;
-	unsigned int m;
-};
-
 
 #define REFERENCE_N		512
 #define SEC_FILTER_N		128
@@ -62,20 +41,11 @@ struct fxlms_params
 const float ****s;
 struct lf_ring ***r;
 struct lf_ring *e;
-static struct lf_ring x[256];
+static struct lf_ring x[ADAPTATION_FILTER_N * 2];
 static struct lf_ring feedback_ref[8];
 
-static struct fxlms_params plate_params = {
-	.u	= 4,
-	.e	= 9,
-	.x	= 1,
-	.m	= 128,
-	.n	= 128,
-	.mu	= 0.001,
-	.zeta	= 1e-6,
-};
 
-static int num_errors[9] = {1,2,3,9, 10, 11,19, 27, 35};
+// static int num_errors[9] = {1,2,3,9, 10, 11,19, 27, 35};
 
 static double feedback_neutralization(int node_id)
 {
@@ -87,65 +57,65 @@ static double feedback_neutralization(int node_id)
 	return f;
 }
 
-static void fxlms_initialize_r()
-{
-	r = malloc(plate_params.x * sizeof(*r));
-	for (int xi = 0; xi < plate_params.x; xi++) {
-		r[xi] = malloc(plate_params.e * sizeof(**r));
-		for (int ei = 0; ei < plate_params.e; ei++) {
-			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
-			for (int ui = 0; ui < plate_params.u; ui++) {
-				lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
-				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
-			}
-		}
-	}
-}
+// static void fxlms_initialize_r()
+// {
+// 	r = malloc(plate_params.x * sizeof(*r));
+// 	for (int xi = 0; xi < plate_params.x; xi++) {
+// 		r[xi] = malloc(plate_params.e * sizeof(**r));
+// 		for (int ei = 0; ei < plate_params.e; ei++) {
+// 			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
+// 			for (int ui = 0; ui < plate_params.u; ui++) {
+// 				lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
+// 				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
+// 			}
+// 		}
+// 	}
+// }
 
-static void fxlms_initialize_s()
-{
-	s = malloc(CONTROL_N * sizeof(*s));
-	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
-	s[num_channels] = malloc(plate_params.e * sizeof(**s));
-	for (int ei = 0; ei < plate_params.e; ei++)
-		s[num_channels][ei] = malloc(plate_params.u * sizeof(***s));
-	}
-}	
+// static void fxlms_initialize_s()
+// {
+// 	s = malloc(CONTROL_N * sizeof(*s));
+// 	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+// 	s[num_channels] = malloc(plate_params.e * sizeof(**s));
+// 	for (int ei = 0; ei < plate_params.e; ei++)
+// 		s[num_channels][ei] = malloc(plate_params.u * sizeof(***s));
+// 	}
+// }	
 
-static void fxlms_initialize_e(){
-	e = malloc(plate_params.e * sizeof(*e));
-	for (int ei = 0; ei < plate_params.e; ei++) {
-		lf_ring_init(&e[ei], SEC_FILTER_N);
-		lf_ring_set_buffer(&e[ei], NULL, 0);
-	}
-}
+// static void fxlms_initialize_e(){
+// 	e = malloc(plate_params.e * sizeof(*e));
+// 	for (int ei = 0; ei < plate_params.e; ei++) {
+// 		lf_ring_init(&e[ei], SEC_FILTER_N);
+// 		lf_ring_set_buffer(&e[ei], NULL, 0);
+// 	}
+// }
 
 
-static double fxlms_normalize(const struct lf_ring ***r){
+// static double fxlms_normalize(const struct lf_ring ***r){
 
-	unsigned int ui = 0;
-	unsigned int xi = 0;	
-	float power = 0;
+// 	unsigned int ui = 0;
+// 	unsigned int xi = 0;	
+// 	float power = 0;
 
-	unsigned int ei = 0;
+// 	unsigned int ei = 0;
 
-	for(int i = 0; i<256; i++){
-		xi = 0;
-		do{
-			ei = 0;
-			do{
-				ui = 0;
-				do{
+// 	for(int i = 0; i < ADAPTATION_FILTER_N * 2; i++){
+// 		xi = 0;
+// 		do{
+// 			ei = 0;
+// 			do{
+// 				ui = 0;
+// 				do{
 
-				float t = lf_ring_get(&r[xi][ei][ui], i);
-				power += t * t;
+// 				float t = lf_ring_get(&r[xi][ei][ui], i);
+// 				power += t * t;
 
-				} while(++ui < plate_params.u);
-			} while(++ei < plate_params.e);
-		} while(++xi < plate_params.x);
-	}
-	return plate_params.mu / (power + plate_params.zeta);
-}
+// 				} while(++ui < plate_params.u);
+// 			} while(++ei < plate_params.e);
+// 		} while(++xi < plate_params.x);
+// 	}
+// 	return plate_params.mu / (power + plate_params.zeta);
+// }
 
 static int return_greater(int current, int next){
 	if(current > next)
@@ -153,24 +123,24 @@ static int return_greater(int current, int next){
 	else return next;
 }
 
-void prepare_ref(complex *r_com, const struct lf_ring *r){
-	for (int i = 0; i < ADAPTATION_FILTER_N * 2; i++){
-		r_com[i]  = lf_ring_get(r, i);
-	}
-}
+// void prepare_ref(complex *r_com, const struct lf_ring *r){
+// 	for (int i = 0; i < ADAPTATION_FILTER_N * 2; i++){
+// 		r_com[i]  = lf_ring_get(r, i);
+// 	}
+// }
 
-void prepare_err(complex *e_com, const struct lf_ring *e){
-	for (int i = 0; i < ADAPTATION_FILTER_N; i++){
-		e_com[i]  = lf_ring_get(e, (ADAPTATION_FILTER_N * 2) - i); 
-		e_com[ADAPTATION_FILTER_N + i] = 0.0;
-	}
-}
+// void prepare_err(complex *e_com, const struct lf_ring *e){
+// 	for (int i = 0; i < ADAPTATION_FILTER_N; i++){
+// 		e_com[i]  = lf_ring_get(e, (ADAPTATION_FILTER_N * 2) - i); 
+// 		e_com[ADAPTATION_FILTER_N + i] = 0.0;
+// 	}
+// }
 
-complex calculate_alfa(complex *e_com, complex *r_com, complex *alfa){
-	for(int i = 0; i < ADAPTATION_FILTER_N * 2; i++){
-		alfa[i] = conj(r_com[i]) * e_com[i];
-	}
-}
+// complex calculate_alfa(complex *e_com, complex *r_com, complex *alfa){
+// 	for(int i = 0; i < ADAPTATION_FILTER_N * 2; i++){
+// 		alfa[i] = conj(r_com[i]) * e_com[i];
+// 	}
+// }
 
 int main() {
 
@@ -182,6 +152,18 @@ int main() {
 	float w[CONTROL_N][plate_params.u][ADAPTATION_FILTER_N];
 
 	init_models();
+
+	fxlms_initialize_model(s);
+
+	// fxlms_initialize_s(r);
+
+	// for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
+	// 	for(int ei = 0; ei < plate_params.e; ei++){
+	// 		for(int ui = 0; ui < plate_params.u; ui++){
+	// 			s[num_channel][ei][ui] = models[num_channel][ui][num_errors[ei]];
+	// 		}
+	// 	}
+	// }
 
 	for(int z = 0; z< 1; z++){
 	int16_t *dst; 
@@ -195,7 +177,6 @@ int main() {
 			printf(stderr, "cannot intialize DSP communication");
 		printf("seq: %d\n", dsp_seqnum());
 		dsp_seq = return_greater(dsp_seq, dsp_seqnum());		
-	//	ring_entries = readl(shm + DSP_RING_ENTRIES);
 	}
 	for(int i=0; i < CONTROL_N; i++)
 	{
@@ -208,10 +189,10 @@ int main() {
 		for(int in = 0; in < ADAPTATION_FILTER_N * 2; in++){
 
 			for(int j = 0; j < NUM_OUTPUTS; j++)
-		     			outputs[in][i][j] = dst[16*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);
+		     			outputs[in][i][j] = dst[(NUM_INPUTS + NUM_OUTPUTS)*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);
 			
 			for(int j = 0; j < NUM_INPUTS; j++)
-				inputs[in][i * NUM_INPUTS + j] = dst[16*in + j] * adc_scaler;
+				inputs[in][i * NUM_INPUTS + j] = dst[(NUM_INPUTS + NUM_OUTPUTS)*in + j] * adc_scaler;
 				
 			}
 	}
@@ -238,20 +219,20 @@ int main() {
 
 double mu[CONTROL_N];
 
-	fxlms_initialize_e();
-	fxlms_initialize_s();
+	fxlms_initialize_e(e);
+
 
 for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 	//alokacja miejsca na model s path
-        fxlms_initialize_r();
+        fxlms_initialize_r(r);
 
 	//set s from models
-	for(int ei = 0; ei < plate_params.e; ei++){
-		for(int ui = 0; ui < plate_params.u; ui++){
-			s[num_channel][ei][ui] = models[num_channel][ui][num_errors[ei]];
-		}
-	}
+	// for(int ei = 0; ei < plate_params.e; ei++){
+	// 	for(int ui = 0; ui < plate_params.u; ui++){
+	// 		s[num_channel][ei][ui] = models[num_channel][ui][num_errors[ei]];
+	// 	}
+	// }
 
 	//init x to lfir
 	for(int sample = 0; sample < ADAPTATION_FILTER_N * 2; sample++){
