@@ -95,6 +95,20 @@ static int return_greater(int current, int next){
 	else return next;
 }
 
+static int get_dsp_seq(){
+
+	int dsp_seq;
+
+	for (int i = 0; i < CONTROL_N; i++){
+		snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
+		if(dsp_remap(DSP_RING_BASE, dsp_device));
+			printf(stderr, "cannot intialize DSP communication");
+		printf("seq: %d\n", dsp_seqnum());
+		dsp_seq = return_greater(dsp_seq, dsp_seqnum());		
+	}
+	return dsp_seq;
+}
+
 static void send_data(){
 	int16_t *dst_test;
 	dst_test = malloc(ADAPTATION_FILTER_N*4*2);
@@ -166,21 +180,17 @@ int main() {
 		}
 	}    
 
-	for(int z = 0; z< 1; z++){
+	for(int z = 0; z < 100; z++){
 		int16_t *dst; 
 
 		int dsp_seq = 0;
+		double mi;
 
-		for (int i = 0; i < CONTROL_N; i++){
+		fxlms_initialize_e();
 
-			snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
-			if(dsp_remap(DSP_RING_BASE, dsp_device));
-				printf(stderr, "cannot intialize DSP communication");
-			printf("seq: %d\n", dsp_seqnum());
-			dsp_seq = return_greater(dsp_seq, dsp_seqnum());		
-		}
-		for(int i=0; i < CONTROL_N; i++)
-		{
+		dsp_seq = get_dsp_seq();
+
+		for(int i=0; i < CONTROL_N; i++){
 			snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
 			if(dsp_remap(DSP_RING_BASE, dsp_device));
 				printf(stderr, "cannot intialize DSP communication");
@@ -218,17 +228,12 @@ int main() {
 			}
 		}
 
-	double mi;
-
-	fxlms_initialize_e();
 
 
 	for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
-		//alokacja miejsca na model s path
 		fxlms_initialize_r();
 
-		//init x to lfir
 		for(int sample = 0; sample < ADAPTATION_FILTER_N * 2; sample++){
 			lf_ring_init(x + sample, ADAPTATION_FILTER_N * 2);
 			lf_ring_set_buffer(x + sample, NULL, 0);
@@ -240,8 +245,6 @@ int main() {
 			for(int ei = 0; ei < plate_params.e; ei++ ){
 				lf_ring_add(&e[ei], inputs[sample][num_errors[ei]]);
 			}
-
-			//filter reference signal with s
 			int xi = 0;
 			do {
 				int ei = 0;
