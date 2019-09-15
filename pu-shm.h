@@ -24,14 +24,14 @@
 #define DSP_SAMPLE_SIZE		0x14
 #define DSP_RING_ENTRIES	0x18
 #define DSP_SAMPLES_PER_GROUP	0x1c
-#define DSP_SHM_SIZE		0x20
+//#define DSP_SHM_SIZE		0x20
 #define DSP_IGROUP		0x28	/* last important group */
 #define DSP_FIRST		0x30
 
 #define DSP_GENERATION_BUSY	0x80000000
 
-#define DSP_ALIGNMENT		0x1000
-#define DSP_RING_BASE		0x1000
+//#define DSP_ALIGNMENT		0x1000
+//#define DSP_RING_BASE		0x1000
 
 #define DSP_MAGIC_VALUE		0x50750a00
 
