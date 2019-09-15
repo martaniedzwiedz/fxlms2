@@ -49,51 +49,39 @@ static double fxlms_normalize(const struct lf_ring ***r){
 	return plate_params.mu / (power + plate_params.zeta);
 }
 
-static void fxlms_initialize_r(struct lf_ring ***r)
-{
-	r = malloc(plate_params.x * sizeof(*r));
-	for (int xi = 0; xi < plate_params.x; xi++) {
-		r[xi] = malloc(plate_params.e * sizeof(**r));
-		for (int ei = 0; ei < plate_params.e; ei++) {
-			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
-			for (int ui = 0; ui < plate_params.u; ui++) {
-				lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
-				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
-			}
-		}
-	}
-}
+// static void fxlms_initialize_r(struct lf_ring ***r)
+// {
+// 	r = malloc(plate_params.x * sizeof(*r));
+// 	for (int xi = 0; xi < plate_params.x; xi++) {
+// 		r[xi] = malloc(plate_params.e * sizeof(**r));
+// 		for (int ei = 0; ei < plate_params.e; ei++) {
+// 			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
+// 			for (int ui = 0; ui < plate_params.u; ui++) {
+// 				lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
+// 				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
+// 			}
+// 		}
+// 	}
+// }
 
-static void fxlms_initialize_s(const float ****s)
-{
-	s = malloc(CONTROL_N * sizeof(*s));
-	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
-	s[num_channels] = malloc(plate_params.e * sizeof(**s));
-	for (int ei = 0; ei < plate_params.e; ei++)
-		s[num_channels][ei] = malloc(plate_params.u * sizeof(***s));
-	}
-}	
+// static void fxlms_initialize_s(const float ****s)
+// {
+// 	s = malloc(CONTROL_N * sizeof(*s));
+// 	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+// 	s[num_channels] = malloc(plate_params.e * sizeof(**s));
+// 	for (int ei = 0; ei < plate_params.e; ei++)
+// 		s[num_channels][ei] = malloc(plate_params.u * sizeof(***s));
+// 	}
+// }	
 
-static void fxlms_initialize_e(struct lf_ring *e){
-	e = malloc(plate_params.e * sizeof(*e));
-	for (int ei = 0; ei < plate_params.e; ei++) {
-		lf_ring_init(&e[ei], SEC_FILTER_N);
-		lf_ring_set_buffer(&e[ei], NULL, 0);
-	}
-}
-
-static void fxlms_initialize_model(const float ****s){
-
-	fxlms_initialize_s(s);
-
-	for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
-		for(int ei = 0; ei < plate_params.e; ei++){
-			for(int ui = 0; ui < plate_params.u; ui++){
-				s[num_channel][ei][ui] = models[num_channel][ui][num_errors[ei]];
-			}
-		}
-	}    
-}
+// static void fxlms_initialize_e(struct lf_ring *e)
+// {
+// 	e = malloc(plate_params.e * sizeof(*e));
+// 	for (int ei = 0; ei < plate_params.e; ei++) {
+// 		lf_ring_init(&e[ei], SEC_FILTER_N);
+// 		lf_ring_set_buffer(&e[ei], NULL, 0);
+// 	}
+// }
 
 void prepare_ref(complex *r_com, const struct lf_ring *r){
 	for (int i = 0; i < ADAPTATION_FILTER_N * 2; i++){
