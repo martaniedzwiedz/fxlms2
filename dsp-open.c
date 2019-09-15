@@ -308,9 +308,9 @@ for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 				for(int i = 0; i < ADAPTATION_FILTER_N; i++){
 
 					w[num_channel][uui][i] = w[num_channel][uui][i] - mu[num_channel] * creal(alfa[i]);
-					//printf("%f ", w[num_channel][uui][i]);
+		//			printf("%f ", w[num_channel][uui][i]);
 				}
-			//	printf("\n");
+		//		printf("\n");
 				uui++;
 			} while (uui < plate_params.u);
 		} while (++eei < plate_params.e);
