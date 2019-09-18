@@ -1,6 +1,7 @@
 #define DSP_ALIGMENT                0x1000
 #define DSP_RING_BASE               0x1000
-#define DSP_PACKAGE_SIZE            0x2000
+//#define DSP_PACKAGE_SIZE            0x1000
+#define DSP_PACKAGE_SIZE			4096
 #define DSP_SEQNUM                  0x08
 #define DSP_SHM_SIZE		    0x20
 #define DSP_WEIGHT_PACKAGE_SIZE     128*4*sizeof(float)
@@ -11,6 +12,10 @@
 
 static const uint8_t *shm, *shm_save;
 unsigned long long shm_offset = 0x1000000;
+
+static  unsigned int get_package_size(int n){
+	return n * DSP_PACKAGE_SIZE;
+}
 
 static unsigned int dsp_seqnum()
 {
@@ -36,11 +41,11 @@ const uint8_t *dsp_get_buffer(unsigned int seq)
 	return shm + DSP_RING_BASE + offset;
 }
 
-void __copy_from_dsp(unsigned int seq, void *dst)
+void __copy_from_dsp(unsigned int seq, void *dst, int n)
 {
 	const uint8_t *buffer = dsp_get_buffer(seq);
 
-	memcpy_fromio(dst, buffer, DSP_PACKAGE_SIZE);
+	memcpy_fromio(dst, buffer, get_package_size(n));
 }
 
 static int dsp_remap(unsigned long size, char *dsp_device)
@@ -108,12 +113,12 @@ static int dsp_begin(char *dsp_device)
 	return 0;
 }
 
-void copy_from_dsp(void * dst, char *dsp_device, unsigned int dsp_seq)
+void copy_from_dsp(void * dst, char *dsp_device, unsigned int dsp_seq, int n)
 {
 	int ret;
 
 	ret = dsp_begin(dsp_device);
-	__copy_from_dsp(dsp_seq, dst );
+	__copy_from_dsp(dsp_seq, dst, n);
 //	show_data(dst, dsp_seq);
 }
 

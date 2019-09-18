@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <math.h>
 #include "models-init.h"
 #include "ring.c"
 #include "fir.c"
@@ -31,12 +32,10 @@
 
 static char dsp_device[40]; 
 
-#define REFERENCE_N		512
-#define SEC_FILTER_N		128
-#define ADAPTATION_FILTER_N 	128
-#define FEEDBACK_N		64
-#define CONTROL_N		5
+#define REFERENCE_N			512
+#define FEEDBACK_N			64
 #define REFERENCE_CHANNEL 	0
+#define SAMPLES_PER_PACKAGE	128
 
 const float ****s;
 struct lf_ring ***r;
@@ -64,7 +63,7 @@ static void fxlms_initialize_r()
 		for (int ei = 0; ei < plate_params.e; ei++) {
 			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
 			for (int ui = 0; ui < plate_params.u; ui++) {
-				lf_ring_init(&r[xi][ei][ui], SEC_FILTER_N);
+				lf_ring_init(&r[xi][ei][ui], plate_params.secondary_n);
 				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
 			}
 		}
@@ -84,7 +83,7 @@ static void fxlms_initialize_s()
 static void fxlms_initialize_e(){
 	e = malloc(plate_params.e * sizeof(*e));
 	for (int ei = 0; ei < plate_params.e; ei++) {
-		lf_ring_init(&e[ei], SEC_FILTER_N);
+		lf_ring_init(&e[ei], plate_params.secondary_n);
 		lf_ring_set_buffer(&e[ei], NULL, 0);
 	}
 }
@@ -113,7 +112,7 @@ static void send_data(){
 	//int16_t *dst_test;
 	//dst_test = malloc(ADAPTATION_FILTER_N*4*2);
 	int32_t *w_to_dst;
-	w_to_dst = malloc(ADAPTATION_FILTER_N*4*sizeof(*w_to_dst));
+	w_to_dst = malloc(plate_params.adaptation_n*plate_params.u*sizeof(*w_to_dst));
 
 	for(int num_chan = 0; num_chan < CONTROL_N; num_chan++){
 		int next = 0;
@@ -121,7 +120,7 @@ static void send_data(){
 		for(int wui = 0; wui < plate_params.u; wui ++){
 			float sum = 0;
 			float sum2 = 0;
-				for(int wi = 0; wi < plate_params.n; wi ++){
+				for(int wi = 0; wi < plate_params.adaptation_n; wi ++){
 					sum += w[num_chan][wui][wi];
 					sum2 += w[num_chan][wui][wi] * w[num_chan][wui][wi];
 					//w[num_chan][wui][wi] = wi/2.0;
@@ -131,12 +130,12 @@ static void send_data(){
 			fprintf(stderr, "ch%d-%d: %f %f\n", num_chan, wui, sum, sum2);
 		}
 		snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", 0);
-		send_to_dsp(w_to_dst, dsp_device, ADAPTATION_FILTER_N, plate_params.u );
+		send_to_dsp(w_to_dst, dsp_device, plate_params.adaptation_n, plate_params.u);
 	}
 }
 
 static void adaptation(double mi, int num_channel){
-		complex alfa[ADAPTATION_FILTER_N * 2], e_com[ADAPTATION_FILTER_N * 2], r_com[ADAPTATION_FILTER_N * 2];
+		complex alfa[plate_params.adaptation_n * 2], e_com[plate_params.adaptation_n * 2], r_com[plate_params.adaptation_n * 2];
 
 		unsigned int xi = 0;
 		do
@@ -145,15 +144,15 @@ static void adaptation(double mi, int num_channel){
 			do
 			{
 				prepare_err(e_com, &e[ei]);
-				fft(e_com, ADAPTATION_FILTER_N * 2);
+				fft(e_com, plate_params.adaptation_n * 2);
 				unsigned int ui = 0;
 				do
 				{
 					prepare_ref(r_com, &r[xi][ei][ui]);
-					fft(r_com, ADAPTATION_FILTER_N * 2);
+					fft(r_com, plate_params.adaptation_n * 2);
 					calculate_alfa(e_com, r_com, alfa);
-					ifft(alfa, ADAPTATION_FILTER_N * 2);
-					for(int i = 0; i < ADAPTATION_FILTER_N; i++){
+					ifft(alfa, plate_params.adaptation_n * 2);
+					for(int i = 0; i < plate_params.adaptation_n; i++){
 
 						w[num_channel][ui][i] = w[num_channel][ui][i] - mi * creal(alfa[i]);
 		//			printf("%f ", w[num_channel][ui][i]);
@@ -166,10 +165,14 @@ static void adaptation(double mi, int num_channel){
 		} while (xi < plate_params.x);
 }
 
+static int getPackage(){
+		return (int)ceil((plate_params.adaptation_n * 3)/SAMPLES_PER_PACKAGE);
+}
+
 int main() {
 
-	float outputs[ADAPTATION_FILTER_N * 2][CONTROL_N][NUM_OUTPUTS];
-	float inputs[ADAPTATION_FILTER_N * 2][NUM_ALL_INPUTS];
+	float outputs[plate_params.adaptation_n * 2][CONTROL_N][NUM_OUTPUTS];
+	float inputs[plate_params.adaptation_n * 2][NUM_ALL_INPUTS];
 	float adc_scaler=1.0 / (32678.0 * ADC_FILTER_GAIN);
 	
 
@@ -200,8 +203,8 @@ int main() {
 			if(dsp_remap(DSP_RING_BASE, dsp_device))
 				fprintf(stderr, "cannot intialize DSP communication");
 
-			dst = malloc(DSP_PACKAGE_SIZE);
-			copy_from_dsp(dst,dsp_device, dsp_seq - 2);
+			dst = malloc(get_package_size(getPackage()));
+			copy_from_dsp(dst,dsp_device, dsp_seq - getPackage(), get_package_size(getPackage()));
 			for(int in = 0; in < ADAPTATION_FILTER_N * 2; in++){
 
 				for(int j = 0; j < NUM_OUTPUTS; j++)
@@ -259,7 +262,7 @@ int main() {
 					do {
 						double r_temp;
 
-						r_temp = lf_fir(&x[sample], s[num_channel][ei][ui], SEC_FILTER_N);
+						r_temp = lf_fir(&x[sample], s[num_channel][ei][ui], plate_params.secondary_n);
 						lf_ring_add(&r[xi][ei][ui], r_temp);
 						ui++;
 					} while (ui < plate_params.u);

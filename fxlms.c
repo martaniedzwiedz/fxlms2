@@ -12,15 +12,15 @@ struct fxlms_params
 	unsigned int u;
 	unsigned int e;
 	unsigned int x;
-	unsigned int n;
-	unsigned int m;
+	unsigned int adaptation_n; //adaptation filter
+	unsigned int secondary_n; //secondary filter
 };
 static struct fxlms_params plate_params = {
 	.u	= CONTROL_CHANNELS,
 	.e	= ERROR_CHANNELS,
 	.x	= 1,
-	.m	= 128,
-	.n	= 128,
+	.adaptation_n	= 128,
+	.secondary_n	= 128,
 	.mu	= 0.01,
 	.zeta	= 1e-6,
 };
