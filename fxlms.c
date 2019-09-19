@@ -14,6 +14,7 @@ struct fxlms_params
 	unsigned int x;
 	unsigned int adaptation_n; //adaptation filter
 	unsigned int secondary_n; //secondary filter
+	unsigned int feedback_n; //feedback filter
 };
 static struct fxlms_params plate_params = {
 	.u	= CONTROL_CHANNELS,
@@ -21,6 +22,7 @@ static struct fxlms_params plate_params = {
 	.x	= 1,
 	.adaptation_n	= 128,
 	.secondary_n	= 128,
+	.feedback_n	= 64,
 	.mu	= 0.01,
 	.zeta	= 1e-6,
 };

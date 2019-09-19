@@ -1,10 +1,10 @@
 #define DSP_ALIGMENT                0x1000
 #define DSP_RING_BASE               0x1000
-//#define DSP_PACKAGE_SIZE            0x1000
-#define DSP_PACKAGE_SIZE			4096
+//#define DSP_PACKAGE_SIZE          0x1000
+#define DSP_PACKAGE_SIZE	    4096
 #define DSP_SEQNUM                  0x08
 #define DSP_SHM_SIZE		    0x20
-#define DSP_WEIGHT_PACKAGE_SIZE     128*4*sizeof(float)
+//#define DSP_WEIGHT_PACKAGE_SIZE     128*4*sizeof(float)
 #define DSP_RING_ENTRIES            0x18
 #define DSP_CONTROL_OFFSET          0x04
 #define DSP_WEIGHT_DATA_OFFSET      0x20
@@ -14,7 +14,12 @@ static const uint8_t *shm, *shm_save;
 unsigned long long shm_offset = 0x1000000;
 
 static  unsigned int get_package_size(int n){
+	
 	return n * DSP_PACKAGE_SIZE;
+}
+
+static unsigned int get_weight_package_size(int n, int u){
+	return n * u * sizeof(float); 
 }
 
 static unsigned int dsp_seqnum()
@@ -144,7 +149,7 @@ void send_to_dsp(int8_t *dst, char *dsp_device, unsigned int weight_n, unsigned 
 
 	writel(weight_n, filty);
 	writel(control_n, filty + DSP_CONTROL_OFFSET);	
-	memcpy_toio(filty + DSP_WEIGHT_DATA_OFFSET, dst, DSP_WEIGHT_PACKAGE_SIZE);
-//	munmap(filty, 0xf0000);;
+	memcpy_toio(filty + DSP_WEIGHT_DATA_OFFSET, dst, get_weight_package_size(weight_n, control_n));
+	//munmap(filty, 0xf0000);;
 	close(fd);
 }
