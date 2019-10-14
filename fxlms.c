@@ -22,12 +22,12 @@ static struct fxlms_params plate_params = {
 	.x	= 1,
 	.adaptation_n	= 128,
 	.secondary_n	= 128,
-	.feedback_n	= 64,
-	.mu	= 0.01,
+	.feedback_n	= 128,
+	.mu	= 0.0001,
 	.zeta	= 1e-6,
 };
 
-static double fxlms_normalize(const struct lf_ring ***r){
+static double fxlms_normalize(struct lf_ring **const *r){
 
 	unsigned int ui = 0;
 	unsigned int xi = 0;	
@@ -61,8 +61,9 @@ void prepare_ref(complex *r_com, const struct lf_ring *r){
 
 void prepare_err(complex *e_com, const struct lf_ring *e){
 	for (int i = 0; i < ADAPTATION_FILTER_N; i++){
-		e_com[i]  = lf_ring_get(e, (ADAPTATION_FILTER_N * 2) - i); 
-		e_com[ADAPTATION_FILTER_N + i] = 0.0;
+		e_com[i] = 0.0;
+//		e_com[ADAPTATION_FILTER_N + i] = lf_ring_get(e, (ADAPTATION_FILTER_N * 2) - i); 
+		e_com[ADAPTATION_FILTER_N + i] = lf_ring_get(e, i); 
 	}
 }
 

@@ -1,0 +1,25 @@
+AC_INIT([[fxlms]], 0.0.0-pre0, [[krzysiek@podlesie.net]], [[fxlms]])
+AM_INIT_AUTOMAKE
+
+AC_GNU_SOURCE
+
+AC_PROG_CC
+AC_PROG_CC_C99
+AC_PROG_INSTALL
+
+AC_ARG_ENABLE(debug, [  --enable-debug	add debug symbols], debug=yes)
+if test "x$debug" = "xyes"; then
+	CFLAGS="${CFLAGS} -g"
+fi
+
+AC_ARG_ENABLE(developer, [  --enable-developer	enable warnings], developer=yes)
+if test "x$developer" = "xyes"; then
+	CFLAGS="${CFLAGS} -gstabs -Wall -Wshadow -Wstrict-prototypes -Wpointer-arith -Wcast-align -Wwrite-strings"
+	AC_DEFINE([DEVELOPER], [], [Developer])
+fi
+
+AC_CHECK_LIB([m], [sin],[], AC_ERROR([libm is missing.]))
+
+AC_OUTPUT([
+Makefile
+])

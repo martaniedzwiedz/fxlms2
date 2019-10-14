@@ -1,0 +1,731 @@
+==23097== Memcheck, a memory error detector
+==23097== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==23097== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==23097== Command: ./dsp-open
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0C8B0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0C8D1: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E02720: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0C900: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0C755: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0CDE2: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0D998: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01458: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D99C: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0145B: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D99C: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0D9DC: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DAAB: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DA9E: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A04: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E01848: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0DAE9: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A8F: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E01848: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0DAE9: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01B02: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E01848: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0DAE9: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01859: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0DAE9: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DA24: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0DA5E: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DA76: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DA7C: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0DB13: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DB35: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0E21C: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0E23F: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01568: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0E24C: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0158D: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0E24C: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0BFD9: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D0C0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A04: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BFE0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D0C0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A28: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BFE0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D0C0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D0C8: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D100: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0BFD9: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D117: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A04: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BFE0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D117: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A28: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BFE0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0D117: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D12F: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D90C: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D916: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D79E: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D7C1: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D7EB: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D814: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D2B1: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D38D: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DD91: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DD73: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0E603: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A04: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0E624: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01A8F: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0E624: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01B02: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0E624: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0E63B: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0E650: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E01568: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0E889: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0158D: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0E889: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Syscall param write(buf) points to uninitialised byte(s)
+==23097==    at 0x4EA5404: write (in /lib64/libc-2.27.so)
+==23097==    by 0x4E3558C: _IO_file_write (in /lib64/libc-2.27.so)
+==23097==    by 0x4E3489E: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E35D2D: _IO_file_xsputn (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BD6A: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097==  Address 0x1ffefd495c is on thread 1's stack
+==23097== 
+ch0-0: 0.000721 0.000017
+ch0-1: -0.000570 0.000062
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0D7E2: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+ch0-2: -0.004193 0.000060
+ch0-3: 0.002947 0.000066
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0E193: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0E199: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+ch1-0: -0.002689 0.000024
+ch1-1: -0.002128 0.000023
+ch1-2: 0.002953 0.000073
+ch1-3: 0.003077 0.000073
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E02725: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0C900: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0E1B0: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+ch2-0: 0.000000 0.000000
+ch2-1: 0.000000 0.000000
+ch2-2: 0.000000 0.000000
+ch2-3: 0.000000 0.000000
+ch3-0: -0.001731 0.000022
+ch3-1: -0.002396 0.000089
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DBC3: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0DBE8: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DBEB: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+==23097== Conditional jump or move depends on uninitialised value(s)
+==23097==    at 0x4E0DBF1: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+ch3-2: -0.000670 0.000012
+ch3-3: -0.001505 0.000003
+ch4-0: -0.000744 0.000044
+ch4-1: 0.002098 0.000070
+ch4-2: -0.003571 0.000080
+==23097== Use of uninitialised value of size 8
+==23097==    at 0x4E0E1AA: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E09CAE: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0BCE5: ??? (in /lib64/libc-2.27.so)
+==23097==    by 0x4E0906D: vfprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x4E119B3: fprintf (in /lib64/libc-2.27.so)
+==23097==    by 0x405F66: send_data (dsp-open.c:143)
+==23097==    by 0x405F66: main (dsp-open.c:352)
+==23097== 
+ch4-3: -0.000522 0.000023
+ch0-0: 0.001696 0.000001
+ch0-1: -0.000629 0.000009
+ch0-2: -0.001771 0.000008
+ch0-3: 0.002810 0.000011
+ch1-0: -0.002839 0.000003
+ch1-1: -0.002781 0.000006
+ch1-2: 0.001999 0.000007
+ch1-3: 0.001854 0.000010
+ch2-0: 0.000000 0.000000
+ch2-1: 0.000000 0.000000
+ch2-2: 0.000000 0.000000
+ch2-3: 0.000000 0.000000
+ch3-0: -0.003764 0.000003
+ch3-1: -0.004382 0.000008
+ch3-2: 0.001158 0.000002
+ch3-3: 0.000047 0.000002
+ch4-0: 0.002401 0.000007
+ch4-1: 0.002127 0.000009
+ch4-2: 0.001374 0.000008
+ch4-3: 0.002483 0.000004
+ch0-0: 0.002587 0.000012
+ch0-1: -0.001125 0.000089
+ch0-2: -0.000799 0.000082
+ch0-3: 0.000846 0.000098
+ch1-0: -0.002567 0.000028
+ch1-1: -0.002659 0.000030
+ch1-2: -0.000102 0.000085
+ch1-3: 0.000841 0.000084
+ch2-0: 0.000000 0.000000
+ch2-1: 0.000000 0.000000
+ch2-2: 0.000000 0.000000
+ch2-3: 0.000000 0.000000
+ch3-0: -0.004010 0.000029
+ch3-1: -0.003672 0.000114
+ch3-2: 0.000258 0.000018
+ch3-3: -0.000571 0.000004
+ch4-0: 0.000644 0.000051
+ch4-1: -0.003115 0.000077
+ch4-2: -0.000997 0.000097
+ch4-3: -0.000999 0.000022
+ch0-0: 0.003213 0.000039
+ch0-1: -0.001910 0.000240
+ch0-2: -0.001351 0.000216
+ch0-3: -0.002632 0.000261
+ch1-0: -0.000143 0.000078
+ch1-1: -0.000322 0.000079
+ch1-2: -0.002806 0.000253
+ch1-3: -0.001899 0.000249
+ch2-0: 0.000000 0.000000
+ch2-1: 0.000000 0.000000
+ch2-2: 0.000000 0.000000
+ch2-3: 0.000000 0.000000
+ch3-0: -0.001709 0.000079
+ch3-1: 0.001718 0.000332
+ch3-2: -0.000572 0.000048
+ch3-3: -0.001198 0.000010
+ch4-0: -0.001328 0.000137
+ch4-1: -0.006355 0.000223
+ch4-2: -0.001722 0.000280
+ch4-3: -0.004063 0.000058
+ch0-0: 0.004259 0.000063
+ch0-1: -0.001687 0.000342
+ch0-2: -0.004107 0.000331
+ch0-3: -0.000025 0.000396
+ch1-0: 0.000625 0.000127
+ch1-1: 0.000180 0.000122
+ch1-2: -0.001609 0.000420
+ch1-3: -0.000498 0.000419
+ch2-0: 0.000000 0.000000
+ch2-1: 0.000000 0.000000
+ch2-2: 0.000000 0.000000
+ch2-3: 0.000000 0.000000
+ch3-0: -0.000086 0.000126
+ch3-1: 0.003444 0.000526
+ch3-2: -0.000506 0.000071
+ch3-3: -0.001393 0.000015
+ch4-0: -0.004297 0.000210
+ch4-1: -0.005275 0.000359
+ch4-2: -0.004998 0.000426
+ch4-3: -0.005745 0.000094
+==23097== 
+==23097== Process terminating with default action of signal 2 (SIGINT)
+==23097==    at 0x4A653A8: sincos (in /lib64/libm-2.27.so)
+==23097==    by 0x4A6ECDE: cexp (in /lib64/libm-2.27.so)
+==23097==    by 0x406683: _fft.part.1 (fft.c:42)
+==23097==    by 0x406609: _fft.part.1 (fft.c:39)
+==23097==    by 0x406609: _fft.part.1 (fft.c:39)
+==23097==    by 0x4065EE: _fft.part.1 (fft.c:38)
+==23097==    by 0x406785: _fft (fft.c:37)
+==23097==    by 0x406785: fft (fft.c:54)
+==23097==    by 0x405D7C: adaptation (dsp-open.c:164)
+==23097==    by 0x405D7C: main (dsp-open.c:349)
+==23097== 
+==23097== HEAP SUMMARY:
+==23097==     in use at exit: 72,320 bytes in 141 blocks
+==23097==   total heap usage: 171 allocs, 30 frees, 563,840 bytes allocated
+==23097== 
+==23097== LEAK SUMMARY:
+==23097==    definitely lost: 10,240 bytes in 5 blocks
+==23097==    indirectly lost: 0 bytes in 0 blocks
+==23097==      possibly lost: 0 bytes in 0 blocks
+==23097==    still reachable: 62,080 bytes in 136 blocks
+==23097==         suppressed: 0 bytes in 0 blocks
+==23097== Rerun with --leak-check=full to see details of leaked memory
+==23097== 
+==23097== Use --track-origins=yes to see where uninitialised values come from
+==23097== For lists of detected and suppressed errors, rerun with: -s
+==23097== ERROR SUMMARY: 14265 errors from 63 contexts (suppressed: 0 from 0)

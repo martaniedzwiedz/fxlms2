@@ -15,11 +15,12 @@
 #include <math.h>
 #include "models-init.h"
 #include "ring.c"
+//#include "ring.h"
 #include "fir.c"
 #include "fft.c"
 #include "pu-shm.c"
 #include "fxlms.c"
-
+#include <getopt.h>
 
 #define NUM_ALL_INPUTS		40
 #define NUM_OUTPUTS		8
@@ -30,21 +31,27 @@
 #define ADC_FILTER_GAIN (30.0/32)
 
 
-static char dsp_device[40]; 
-
 #define REFERENCE_N			512
-#define FEEDBACK_N			64
 #define REFERENCE_CHANNEL 	0
 #define SAMPLES_PER_PACKAGE	128
 
-const float ****s;
-struct lf_ring ***r;
-struct lf_ring *e;
-static struct lf_ring *x;
-static struct lf_ring feedback_ref[4];
+static const float ****s;
+static struct lf_ring ***r;
+static struct lf_ring *e;
+static struct lf_ring x;
+static struct lf_ring feedback_ref;
+static float ***w;
 
-//float w[CONTROL_N][CONTROL_CHANNELS][ADAPTATION_FILTER_N];
+void *xmalloc(size_t size)
+{
+	void *p = malloc(size);
 
+	if(unlikely(!p)){
+		fprintf(stderr, "out of memory\n");
+		exit(EXIT_FAILURE);
+	}
+	return p;
+}
 
 static double feedback_neutralization(int node_id)
 {
@@ -52,18 +59,28 @@ static double feedback_neutralization(int node_id)
 	double f = 0;
 
 	for (ui = 0; ui < plate_params.u ; ui++)
-		f = lf_fir(&feedback_ref[ui], models[node_id][ui][REFERENCE_CHANNEL], plate_params.feedback_n);
+		f += lf_fir(&feedback_ref, models[node_id][ui][REFERENCE_CHANNEL], plate_params.feedback_n);
 	return f;
+}
+
+static void fxlms_initialize_w()
+{
+	w = xmalloc(CONTROL_N * sizeof(*w));
+	for(unsigned int num_chan = 0; num_chan < CONTROL_N; num_chan++){
+		w[num_chan] = xmalloc(plate_params.u * sizeof(**w));
+		for(unsigned int ui = 0; ui < plate_params.u; ui++)
+			w[num_chan][ui] = xmalloc(plate_params.adaptation_n * sizeof(***w));
+	}
 }
 
 static void fxlms_initialize_r()
 {
-	r = malloc(plate_params.x * sizeof(*r));
-	for (int xi = 0; xi < plate_params.x; xi++) {
-		r[xi] = malloc(plate_params.e * sizeof(**r));
-		for (int ei = 0; ei < plate_params.e; ei++) {
-			r[xi][ei] = malloc(plate_params.u * sizeof(***r));
-			for (int ui = 0; ui < plate_params.u; ui++) {
+	r = xmalloc(plate_params.x * sizeof(*r));
+	for (unsigned int xi = 0; xi < plate_params.x; xi++) {
+		r[xi] = xmalloc(plate_params.e * sizeof(**r));
+		for (unsigned int ei = 0; ei < plate_params.e; ei++) {
+			r[xi][ei] = xmalloc(plate_params.u * sizeof(***r));
+			for (unsigned int ui = 0; ui < plate_params.u; ui++) {
 				lf_ring_init(&r[xi][ei][ui], plate_params.adaptation_n * 2);
 				lf_ring_set_buffer(&r[xi][ei][ui], NULL, 0);
 			}
@@ -73,56 +90,50 @@ static void fxlms_initialize_r()
 
 static void fxlms_initialize_s()
 {
-	s = malloc(CONTROL_N * sizeof(*s));
-	for(int num_channels = 0; num_channels < CONTROL_N; num_channels++){
-	s[num_channels] = malloc(plate_params.e * sizeof(**s));
-	for (int ei = 0; ei < plate_params.e; ei++)
-		s[num_channels][ei] = malloc(plate_params.u * sizeof(***s));
+	s = xmalloc(CONTROL_N * sizeof(*s));
+	for(unsigned int num_channels = 0; num_channels < CONTROL_N; num_channels++){
+		s[num_channels] = xmalloc(plate_params.e * sizeof(**s));
+		for (unsigned int ei = 0; ei < plate_params.e; ei++)
+			s[num_channels][ei] = xmalloc(plate_params.u * sizeof(***s));
 	}
 }	
 
 static void fxlms_initialize_e(){
-	e = malloc(plate_params.e * sizeof(*e));
-	for (int ei = 0; ei < plate_params.e; ei++) {
+	e = xmalloc(plate_params.e * sizeof(*e));
+	for (unsigned int ei = 0; ei < plate_params.e; ei++) {
 		lf_ring_init(&e[ei], plate_params.adaptation_n * 2);
 		lf_ring_set_buffer(&e[ei], NULL, 0);
        	}
 }
 
-static int return_greater(int current, int next){
+static unsigned int return_greater(unsigned int current, unsigned int next){
 	if(current > next)
 		return current;
 	else return next;
 }
 
-static int get_dsp_seq(){
+static unsigned int get_dsp_seq(){
 
-	int dsp_seq = 0; 
+	unsigned int dsp_seq = 0; 
 
-	for (int i = 0; i < CONTROL_N; i++){
-		snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
-		if(dsp_remap(DSP_RING_BASE, dsp_device))
-			fprintf(stderr, "cannot intialize DSP communication");
-	//	printf("seq: %d\n", dsp_seqnum());
-		dsp_seq = return_greater(dsp_seq, dsp_seqnum());		
-	}
+	for (unsigned int i = 0; i < CONTROL_N; i++)
+		dsp_seq = return_greater(dsp_seq, dsp_seqnum(i));		
+
 	return dsp_seq;
 }
 
-static void send_data(float w[CONTROL_N][CONTROL_CHANNELS][plate_params.adaptation_n]){
+static void send_data(){
 
-	//int16_t *dst_test;
-	//dst_test = malloc(ADAPTATION_FILTER_N*4*2);
 	int32_t *w_to_dst;
-	w_to_dst = malloc(plate_params.adaptation_n*plate_params.u*sizeof(*w_to_dst));
+	w_to_dst = xmalloc(plate_params.adaptation_n*plate_params.u*sizeof(*w_to_dst));
 
-	for(int num_chan = 0; num_chan < CONTROL_N; num_chan++){
+	for(unsigned int num_chan = 0; num_chan < CONTROL_N; num_chan++){
 		int next = 0;
 
-		for(int wui = 0; wui < plate_params.u; wui ++){
+		for(unsigned int wui = 0; wui < plate_params.u; wui ++){
 			float sum = 0;
 			float sum2 = 0;
-				for(int wi = 0; wi < plate_params.adaptation_n; wi ++){
+				for(unsigned int wi = 0; wi < plate_params.adaptation_n; wi ++){
 					sum += w[num_chan][wui][wi];
 					sum2 += w[num_chan][wui][wi] * w[num_chan][wui][wi];
 					//w[num_chan][wui][wi] = wi/2.0;
@@ -131,13 +142,21 @@ static void send_data(float w[CONTROL_N][CONTROL_CHANNELS][plate_params.adaptati
 				}
 			fprintf(stderr, "ch%d-%d: %f %f\n", num_chan, wui, sum, sum2);
 		}
-		snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", 0);
-		send_to_dsp(w_to_dst, dsp_device, plate_params.adaptation_n, plate_params.u);
+		send_to_dsp(w_to_dst, plate_params.adaptation_n, plate_params.u, num_chan);
 	}
 }
 
-static void adaptation(double mi, int num_channel, float w[CONTROL_N][CONTROL_CHANNELS][plate_params.adaptation_n]){
+static void adaptation(double mi, int num_channel){
 		complex alfa[plate_params.adaptation_n * 2], e_com[plate_params.adaptation_n * 2], r_com[plate_params.adaptation_n * 2];
+					
+		unsigned int ui = 0;
+#if 0
+		do {
+			for(unsigned int i = 0; i < plate_params.adaptation_n; i++)
+				w[num_channel][ui][i] *= 0.999999;
+			ui++;
+		} while (ui < plate_params.u);
+#endif
 
 		unsigned int xi = 0;
 		do
@@ -154,8 +173,8 @@ static void adaptation(double mi, int num_channel, float w[CONTROL_N][CONTROL_CH
 					fft(r_com, plate_params.adaptation_n * 2);
 					calculate_alfa(e_com, r_com, alfa);
 					ifft(alfa, plate_params.adaptation_n * 2);
-					for(int i = 0; i < plate_params.adaptation_n; i++){
-						w[num_channel][ui][i] = w[num_channel][ui][i] - mi * creal(alfa[i]);
+					for(unsigned int i = 0; i < plate_params.adaptation_n; i++){
+						w[num_channel][ui][i] -= mi * creal(alfa[i]);
 		//			printf("%f ", w[num_channel][ui][i]);
 					}
 			//		printf("\n");
@@ -166,173 +185,202 @@ static void adaptation(double mi, int num_channel, float w[CONTROL_N][CONTROL_CH
 		} while (xi < plate_params.x);
 }
 
-static int getSamplesNumber(){
+static unsigned int get_samples_number(){
 	return (plate_params.adaptation_n * 2 + plate_params.feedback_n + plate_params.secondary_n);
 
 }
-static int getPackage(){
-	return (int)ceil(getSamplesNumber()/SAMPLES_PER_PACKAGE);
+static unsigned int get_package(){
+	return (get_samples_number()+SAMPLES_PER_PACKAGE-1)/SAMPLES_PER_PACKAGE;
 }
 
-static void parse_command_line(int argc, char *argv[]){
+static void parse_command_line(int argc, char **argv){
 
 	unsigned int i;
 
-	for(i = 1; i < argc; i++){
-		char *opt = argv[i];
-		char *opta = argv[i + 1];
 
-		if(!strcmp(opt, "--m")){
-			if(opta)
-				plate_params.mu = atof(opta);
-			else
-				printf("%s: missing argument\n",opt);
-		}else if (!strcmp(opt, "--a")){
-			if(opta)
-				plate_params.adaptation_n = atof(opta);
-			else
-				printf("%s: missing argument\n",opt);
-		}else if (!strcmp(opt, "--s")){
-			if(opta)
-				plate_params.secondary_n = atof(opta);
-			else
-				printf("%s: missing argument\n",opt);
-		}else if (!strcmp(opt, "--f")){
-			if(opta)
-				plate_params.feedback_n = atof(opta);
-			else
-				printf("%s: missing argument\n",opt);
+	static struct option long_options[] = {
+		{"mu", 0, NULL, 'm'},
+		{"adaptation", 0, NULL, 'a'},
+		{"secondary", 0, NULL, 's'},
+		{"feedback", 0, NULL, 'f'},
+		{NULL, 0, NULL, 0},
+	};
+
+	int option_index = 0;
+	int c;
+
+	while(1) {
+		c = getopt_long(argc, argv, "m:a:s:f:", long_options, &option_index);
+		if(c == -1)
+			break;
+		switch(c){
+		case 'm':
+			plate_params.mu = atof(optarg);
+			break;
+		case 'a':
+			plate_params.adaptation_n = atoi(optarg);
+			break;
+		case 's':
+			plate_params.secondary_n = atoi(optarg);
+			break;
+		case 'f':
+			plate_params.feedback_n = atoi(optarg);
+			break;
+		default:
+			fprintf(stderr, "Unknown option: %d.\n",c);
+			exit(EXIT_FAILURE);
 		}
 	}
-
 }
 		
-int main(int argc, char *argv[]){
+int main(int argc, char **argv){
 
-	float outputs[getSamplesNumber()][CONTROL_N][NUM_OUTPUTS];
-	float inputs[getSamplesNumber()][NUM_ALL_INPUTS];
-	float adc_scaler=1.0 / (32678.0 * ADC_FILTER_GAIN);
-
-	float w[CONTROL_N][CONTROL_CHANNELS][ADAPTATION_FILTER_N];
+	
 
 	parse_command_line(argc, argv);
+	
+	unsigned int a_n = plate_params.adaptation_n;
+	unsigned int s_n = plate_params.secondary_n;
+	unsigned int f_n = plate_params.feedback_n;
+
+	unsigned int samples_n = get_samples_number();	
+	float outputs[samples_n][CONTROL_N][NUM_OUTPUTS];
+	float inputs[samples_n][NUM_ALL_INPUTS];
+	const float adc_scaler=1.0 / (32678.0 * ADC_FILTER_GAIN);
 
 	init_models();
 
 	fxlms_initialize_s();
+	fxlms_initialize_w();
+	fxlms_initialize_e();
+	fxlms_initialize_r();
 
-	for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
-		for(int ei = 0; ei < plate_params.e; ei++){
-			for(int ui = 0; ui < plate_params.u; ui++){
+	for (unsigned int num_channel = 0; num_channel < CONTROL_N; num_channel++){
+		for(unsigned int ei = 0; ei < plate_params.e; ei++){
+			for(unsigned int ui = 0; ui < plate_params.u; ui++){
 				s[num_channel][ei][ui] = models[num_channel][ui][num_errors[ei]];
 			}
 		}
 	}    
-//for(int z = 0; z<1; z++){
+	
+	lf_ring_init(&feedback_ref, f_n);
+	lf_ring_set_buffer(&feedback_ref, NULL, 0);
+	
+	lf_ring_init(&x, samples_n);
+	lf_ring_set_buffer(&x, NULL, 0);
+
+	for(unsigned int i = 0; i < CONTROL_N; i++)
+		dsp_init(i);			
+
 	for(;;){
 		int16_t *dst; 
+		static unsigned int dsp_old = -1;
 
-		int dsp_seq = 0;
+		unsigned int dsp_seq = 0;
 		double mi;
 
-		fxlms_initialize_e();
 
 		dsp_seq = get_dsp_seq();
+		if (dsp_seq == dsp_old) {
+			abort();
+		}
+		dsp_old = dsp_seq;
+		printf("dsp seq: %d\n", dsp_seq);
+//		exit(0);
 
-		for(int i=0; i < CONTROL_N; i++){
-			snprintf(dsp_device, sizeof(dsp_device), "/dev/ds1104-%d-mem", i);
-			if(dsp_remap(DSP_RING_BASE, dsp_device))
-				fprintf(stderr, "cannot intialize DSP communication");
+		for(unsigned int i=0; i < CONTROL_N; i++){
 
-			dst = malloc(get_package_size(getPackage()));
-			copy_from_dsp(dst,dsp_device, dsp_seq - getPackage(), getPackage());
-			for(int in = 0; in < getSamplesNumber(); in++){
+			unsigned int package_n = get_package(); 
+			dst = malloc(get_package_size(package_n));
+			copy_from_dsp(dst, i, dsp_seq - package_n, package_n);
+			for(unsigned int in = 0; in < get_samples_number(); in++){
 
-				for(int j = 0; j < NUM_OUTPUTS; j++)
-							outputs[in][i][j] = dst[(NUM_INPUTS + NUM_OUTPUTS)*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);
+				for(unsigned int j = 0; j < NUM_OUTPUTS; j++)
+					outputs[in][i][j] = dst[(NUM_INPUTS + NUM_OUTPUTS)*in + NUM_INPUTS + j]/(DAC_MAX_OUTPUT/DAC_GAIN*32768.0);
 				
-				for(int j = 0; j < NUM_INPUTS; j++)
+				for(unsigned int j = 0; j < NUM_INPUTS; j++)
 					inputs[in][i * NUM_INPUTS + j] = dst[(NUM_INPUTS + NUM_OUTPUTS)*in + j] * adc_scaler;
 					
 				}
 			free(dst);
 		}
 
-		double x_full[getSamplesNumber()];
+		double x_full[samples_n];
 
-		
-		for(int in = 0; in < getSamplesNumber() - plate_params.feedback_n ; in++){
-				
-			x_full[in] =  inputs[in][REFERENCE_CHANNEL];
+#if 0 
+		for(unsigned int in = 0; in < samples_n - f_n; in++) {
+			x_full[in] = outputs[in+f_n][0][6];
+//			printf("%.6f\n", x_full[in]);
+		}
+#else	
+		for(unsigned int in = 0; in < samples_n - f_n; in++)			
+			x_full[in] = inputs[in+f_n][REFERENCE_CHANNEL];
 
-			for(int j=0; j < CONTROL_N; j++){
+#if 1
+		for(unsigned int j=0; j < CONTROL_N; j++){
 
-//f 0
-				for (int i = 0; i < plate_params.u; i++) {
-					lf_ring_init(feedback_ref + i, ADAPTATION_FILTER_N * 2);
-					lf_ring_set_buffer(feedback_ref + i, NULL, 0);
+			for (unsigned int i = 0; i < plate_params.u; i++) {
+				for(unsigned int in = 0; in < f_n; in++){
+					lf_ring_add(&feedback_ref, outputs[in][j][i]);
 				}
 
-				for (int ui = 0; ui < plate_params.u; ui++){
-					if(in==0){
-						for(int fi = 0; fi < plate_params.feedback_n; fi++)
-							lf_ring_add(&feedback_ref[ui], outputs[in + fi][j][ui]);
-					}else
-						lf_ring_add(&feedback_ref[ui], outputs[in + plate_params.feedback_n][j][ui]);
+				for(unsigned int in = 0; in < samples_n - f_n; in++){
+					x_full[in] -= lf_fir(&feedback_ref, models[j][i][REFERENCE_CHANNEL], f_n);
+					lf_ring_add(&feedback_ref, outputs[in + f_n][j][i]);
+
 				}
-				x_full[in] -= feedback_neutralization(j);
-//#endif
 			}
 		}
+#endif
+#endif
 
-	for (int num_channel = 0; num_channel < CONTROL_N; num_channel++){
-
-		fxlms_initialize_r();
-
-		lf_ring_init(&x, getSamplesNumber());
-		lf_ring_set_buffer(&x, NULL, 0);
+	for (unsigned int num_channel = 0; num_channel < CONTROL_N; num_channel++){
 
 
-		for(int k = 0; k < plate_params.secondary_n; k++){
+
+
+		for(unsigned int k = 0; k < s_n; k++){
 			lf_ring_add(&x, x_full[k]);
 		}
 
-		for(int sample = plate_params.secondary_n; sample < getSamplesNumber() - plate_params.feedback_n; sample++){
-			lf_ring_add(&x, x_full[sample]);
-			
-	
-			for(int ei = 0; ei < plate_params.e; ei++ ){
-				lf_ring_add(&e[ei],inputs[sample][num_errors[ei]]);
+		for(unsigned int sample = s_n; sample < samples_n - f_n; sample++){
+			for(unsigned int ei = 0; ei < plate_params.e; ei++ ){
+				lf_ring_add(&e[ei], inputs[sample][num_errors[ei]]);
 			}
-			int xi = 0;
+			unsigned int xi = 0;
 			do {
-				int ei = 0;
+				unsigned int ei = 0;
 				do {
-					int ui = 0;
+					unsigned int ui = 0;
 					do {
 						double r_temp;
 
-						r_temp = lf_fir(&x, s[num_channel][ei][ui], plate_params.secondary_n);
+						r_temp = lf_fir(&x, s[num_channel][ei][ui], s_n);
 						lf_ring_add(&r[xi][ei][ui], r_temp);
 						ui++;
 					} while (ui < plate_params.u);
 				} while (++ei < plate_params.e);
 				xi++;
 			} while (xi < plate_params.x);
+			lf_ring_add(&x, x_full[sample]);
 		}
 
 		mi = fxlms_normalize(r);
+//
+//		mi = -0.0003;
+//		mi = 0.00001;
 	//	printf("norm: %1.25lf\n", mi);
 
-		adaptation(mi, num_channel, w);
+		adaptation(mi, num_channel);
+//		usleep(200000);
 	}
 
-	send_data(w);
+	send_data();
 
-	lf_ring_destroy(x);
-	lf_ring_destroy(r);
-	lf_ring_destroy(e);
-	lf_ring_destroy(feedback_ref);
+//	lf_ring_destroy(x);
+//	lf_ring_destroy(r);
+//	lf_ring_destroy(e);
+//	lf_ring_destroy(&feedback_ref);
 	}
 
 return 0;
