@@ -70,7 +70,7 @@ static inline void memcpy_fromio_aligned(u64 *dst, const u64 *src, size_t count)
 	while (count >= 8) {
 		*dst++ = *src++;
 		count -= 8;
-		if ((count & 31) < 8)
+		if (count & 31 < 8)
 			usleep(2);
 	}
 #else

@@ -1,3 +1,5 @@
+#include <limits.h>
+
 #define DSP_ALIGMENT                0x1000
 #define DSP_RING_BASE               0x1000
 //#define DSP_PACKAGE_SIZE          0x1000
@@ -6,7 +8,10 @@
 #define DSP_SHM_SIZE		    0x20
 //#define DSP_WEIGHT_PACKAGE_SIZE     128*4*sizeof(float)
 #define DSP_RING_ENTRIES            0x18
+
+
 #define DSP_CONTROL_OFFSET          0x04
+#define DSP_CONTROL_DATA_OFFSET     0x08
 #define DSP_WEIGHT_DATA_OFFSET      0x20
 #define DSP_WRITE_DATA_OFFSET       0xf00000  
 
@@ -15,13 +20,13 @@ unsigned long long shm_offset = 0x1000000;
 const void *shm_ringbuf[5];
 void *shm_control[5];
 
-static  unsigned int get_package_size(int n){
+static unsigned int get_package_size(int n){
 	
 	return n * DSP_PACKAGE_SIZE;
 }
 
 static unsigned int get_weight_package_size(int n, int u){
-	return n * u * sizeof(float); 
+	return  n * u * sizeof(float); 
 }
 
 static unsigned int dsp_seqnum(int node_id)
@@ -153,38 +158,62 @@ void copy_from_dsp(void * dst, int node_id, unsigned int dsp_seq, int n)
 //	show_data(dst, dsp_seq);
 }
 
+static int buffer;
+
 void send_to_dsp(void *dst, unsigned int weight_n, unsigned int control_n, int node_id)
 {
-	
+	u32 offset;
 	void *filty;
 	int ret;
-	int fd; 
-	char dsp_dev[40];
-	snprintf(dsp_dev, sizeof(dsp_dev), "/dev/ds1104-%d-mem", node_id);
+	size_t count = get_weight_package_size(weight_n, control_n);
 
-	fd = open(dsp_dev, O_RDWR);
-	if(fd == -1){
-		perror("cannot open DSP device");
-	}
-
-	filty = mmap(NULL, 0xf0000, PROT_READ|PROT_WRITE, MAP_SHARED, fd, DSP_WRITE_DATA_OFFSET);
-
-	if(filty==MAP_FAILED){
-		perror("cannot map DSP shared memory");
-	}
-
-	shm_control[node_id] = filty;
-
+	filty = shm_control[node_id];
 	writel(weight_n, filty);
-	writel(control_n, filty + DSP_CONTROL_OFFSET);	
-	memcpy_toio(filty + DSP_WEIGHT_DATA_OFFSET, dst, get_weight_package_size(weight_n, control_n));
-	munmap(filty, 0xf0000);
-	close(fd);
+	writel(control_n, filty + DSP_CONTROL_OFFSET);
+	offset = buffer ? 0 : count;
+	offset += 0x20;
+	memcpy_toio(filty + offset, dst, count);
+}
+
+int dsp_swap_buffers(unsigned int num_nodes)
+{
+	unsigned int i;
+	void *filty;
+	u32 offset;
+
+	for (i = 0; i < num_nodes; i++) {
+		offset = buffer ? 0 : 0x7000; /* FIXME */
+		offset += 0x20;
+		filty = shm_control[i];
+		writel(offset, filty + DSP_WEIGHT_DATA_OFFSET);
+	}
+
+	buffer = !buffer;
 }
 
 int dsp_init(unsigned int node_id)
 {
-	if(dsp_remap(DSP_RING_BASE, node_id))
+	char dsp_dev[PATH_MAX];
+	int fd;
+	void *filty;
+
+	if (dsp_remap(DSP_RING_BASE, node_id))
 		fprintf(stderr, "cannot initialize DSP communication");
+
+	snprintf(dsp_dev, sizeof(dsp_dev), "/dev/ds1104-%d-mem", node_id);
+
+	fd = open(dsp_dev, O_RDWR);
+	if (fd == -1) {
+		perror("cannot open DSP device");
+	}
+
+	filty = mmap(NULL, 0xf0000, PROT_READ|PROT_WRITE, MAP_SHARED, fd, DSP_WRITE_DATA_OFFSET);
+	if (filty == MAP_FAILED) {
+		perror("cannot map DSP shared memory");
+	}
+
+	shm_control[node_id] = filty;
+//	munmap(filty, 0xf0000);
+//	close(fd);
 }
 

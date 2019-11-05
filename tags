@@ -14,26 +14,27 @@ CONTROL_N	fxlms.c	1;"	d	file:
 CRC16_H_INCLUDED	crc16.h	2;"	d
 DAC_GAIN	dsp-open.c	30;"	d	file:
 DAC_MAX_OUTPUT	dsp-open.c	29;"	d	file:
-DSP_ALIGMENT	pu-shm.c	1;"	d	file:
-DSP_CONTROL_OFFSET	pu-shm.c	9;"	d	file:
+DSP_ALIGMENT	pu-shm.c	3;"	d	file:
+DSP_CONTROL_DATA_OFFSET	pu-shm.c	14;"	d	file:
+DSP_CONTROL_OFFSET	pu-shm.c	13;"	d	file:
 DSP_FIRST	pu-shm.h	29;"	d
 DSP_GENERATION	pu-shm.h	23;"	d
 DSP_GENERATION_BUSY	pu-shm.h	31;"	d
 DSP_IGROUP	pu-shm.h	28;"	d
 DSP_MAGIC	pu-shm.h	20;"	d
 DSP_MAGIC_VALUE	pu-shm.h	36;"	d
-DSP_PACKAGE_SIZE	pu-shm.c	4;"	d	file:
-DSP_RING_BASE	pu-shm.c	2;"	d	file:
-DSP_RING_ENTRIES	pu-shm.c	8;"	d	file:
+DSP_PACKAGE_SIZE	pu-shm.c	6;"	d	file:
+DSP_RING_BASE	pu-shm.c	4;"	d	file:
+DSP_RING_ENTRIES	pu-shm.c	10;"	d	file:
 DSP_RING_ENTRIES	pu-shm.h	25;"	d
 DSP_SAMPLES_PER_GROUP	pu-shm.h	26;"	d
 DSP_SAMPLE_SIZE	pu-shm.h	24;"	d
-DSP_SEQNUM	pu-shm.c	5;"	d	file:
+DSP_SEQNUM	pu-shm.c	7;"	d	file:
 DSP_SEQNUM	pu-shm.h	22;"	d
-DSP_SHM_SIZE	pu-shm.c	6;"	d	file:
+DSP_SHM_SIZE	pu-shm.c	8;"	d	file:
 DSP_VERSION	pu-shm.h	21;"	d
-DSP_WEIGHT_DATA_OFFSET	pu-shm.c	10;"	d	file:
-DSP_WRITE_DATA_OFFSET	pu-shm.c	11;"	d	file:
+DSP_WEIGHT_DATA_OFFSET	pu-shm.c	15;"	d	file:
+DSP_WRITE_DATA_OFFSET	pu-shm.c	16;"	d	file:
 ERROR_CHANNELS	fxlms.c	5;"	d	file:
 HAVE_ASSERT_H	config.h	5;"	d
 HAVE_BYTESWAP_H	config.h	8;"	d
@@ -99,30 +100,34 @@ __copy_from_dsp	pu-shm.c	/^void __copy_from_dsp(unsigned int seq, void *dst, int
 __iomem	compiler.h	62;"	d
 __lf_fir	fir.c	/^static float __lf_fir(const float *restrict x,$/;"	f	file:
 __packed	compiler.h	37;"	d
-__raw_readb	asm_io.h	19;"	d
-__raw_readl	asm_io.h	21;"	d
-__raw_readw	asm_io.h	20;"	d
-__raw_writeb	asm_io.h	22;"	d
-__raw_writel	asm_io.h	24;"	d
-__raw_writew	asm_io.h	23;"	d
+__raw_readb	asm_io.h	20;"	d
+__raw_readl	asm_io.h	22;"	d
+__raw_readw	asm_io.h	21;"	d
+__raw_writeb	asm_io.h	24;"	d
+__raw_writel	asm_io.h	26;"	d
+__raw_writew	asm_io.h	25;"	d
 _fft	fft.c	/^void _fft(complex *buf, complex out[], int n, int step) {$/;"	f
 _nassert	fir.c	18;"	d	file:
 adaptation	dsp-open.c	/^static void adaptation(double mi, int num_channel){$/;"	f	file:
+adaptation_fxlms	dsp-open.c	/^static void adaptation_fxlms(double mi, int num_channel)$/;"	f	file:
 adaptation_n	fxlms.c	/^	unsigned int adaptation_n; \/\/adaptation filter$/;"	m	struct:fxlms_params	file:
 allocated	ring.h	/^	int allocated;		\/* buffer is dynamically allocated *\/$/;"	m	struct:lf_ring
 barrier	compiler.h	40;"	d
 barrier	compiler.h	42;"	d
 be16	asm_types.h	/^typedef u16 __bitwise be16;$/;"	t
 be32	asm_types.h	/^typedef u32 __bitwise be32;$/;"	t
+be64	asm_types.h	/^typedef u64 __bitwise be64;$/;"	t
+buffer	pu-shm.c	/^static int buffer;$/;"	v	file:
 calculate_alfa	fxlms.c	/^complex calculate_alfa(complex *e_com, complex *r_com, complex *alfa){$/;"	f
 container_of	compiler.h	77;"	d
 copy_from_dsp	pu-shm.c	/^void copy_from_dsp(void * dst, int node_id, unsigned int dsp_seq, int n)$/;"	f
 dsp_begin	pu-shm.c	/^static int dsp_begin(int node_id)$/;"	f	file:
-dsp_get_buffer	pu-shm.c	/^const uint8_t *dsp_get_buffer(unsigned int seq, int node_id)$/;"	f
+dsp_get_buffer	pu-shm.c	/^const uint8_t *dsp_get_buffer(unsigned int seq, unsigned int node_id)$/;"	f
 dsp_init	pu-shm.c	/^int dsp_init(unsigned int node_id)$/;"	f
 dsp_remap	pu-shm.c	/^static int dsp_remap(unsigned long size, unsigned int node_id)$/;"	f	file:
 dsp_ring_entries	pu-shm.c	/^static unsigned int dsp_ring_entries(int node_id)$/;"	f	file:
 dsp_seqnum	pu-shm.c	/^static unsigned int dsp_seqnum(int node_id)$/;"	f	file:
+dsp_swap_buffers	pu-shm.c	/^int dsp_swap_buffers(unsigned int num_nodes)$/;"	f
 e	dsp-open.c	/^static struct lf_ring *e;$/;"	v	typeref:struct:lf_ring	file:
 e	fxlms.c	/^	unsigned int e;$/;"	m	struct:fxlms_params	file:
 feedback_n	fxlms.c	/^	unsigned int feedback_n; \/\/feedback filter$/;"	m	struct:fxlms_params	file:
@@ -133,11 +138,11 @@ fxlms_initialize_e	dsp-open.c	/^static void fxlms_initialize_e(){$/;"	f	file:
 fxlms_initialize_r	dsp-open.c	/^static void fxlms_initialize_r()$/;"	f	file:
 fxlms_initialize_s	dsp-open.c	/^static void fxlms_initialize_s()$/;"	f	file:
 fxlms_initialize_w	dsp-open.c	/^static void fxlms_initialize_w()$/;"	f	file:
-fxlms_normalize	fxlms.c	/^static double fxlms_normalize(const struct lf_ring ***r){$/;"	f	file:
+fxlms_normalize	fxlms.c	/^static double fxlms_normalize(struct lf_ring ***const *r){$/;"	f	file:
 fxlms_params	fxlms.c	/^struct fxlms_params$/;"	s	file:
 get_dsp_seq	dsp-open.c	/^static unsigned int get_dsp_seq(){$/;"	f	file:
 get_package	dsp-open.c	/^static unsigned int get_package(){$/;"	f	file:
-get_package_size	pu-shm.c	/^static  unsigned int get_package_size(int n){$/;"	f	file:
+get_package_size	pu-shm.c	/^static unsigned int get_package_size(int n){$/;"	f	file:
 get_samples_number	dsp-open.c	/^static unsigned int get_samples_number(){$/;"	f	file:
 get_unaligned	compiler.h	81;"	d
 get_weight_package_size	pu-shm.c	/^static unsigned int get_weight_package_size(int n, int u){$/;"	f	file:
@@ -158,6 +163,7 @@ mb	compiler.h	46;"	d
 mb	compiler.h	51;"	d
 mb	compiler.h	55;"	d
 memcpy_fromio	asm_io.h	/^static inline void memcpy_fromio(void *dst, const void *src, size_t count)$/;"	f
+memcpy_fromio_aligned	asm_io.h	/^static inline void memcpy_fromio_aligned(u64 *dst, const u64 *src, size_t count)$/;"	f
 memcpy_toio	asm_io.h	/^static inline void memcpy_toio(void *dst, const void *src, size_t count)$/;"	f
 models	models-init.h	/^static const float *models[5][8][40];$/;"	v
 mu	fxlms.c	/^	double mu;$/;"	m	struct:fxlms_params	file:
@@ -1762,13 +1768,13 @@ node4_7_6	c4.h	/^static const float node4_7_6[] = {$/;"	v
 node4_7_7	c4.h	/^static const float node4_7_7[] = {$/;"	v
 node4_7_8	c4.h	/^static const float node4_7_8[] = {$/;"	v
 node4_7_9	c4.h	/^static const float node4_7_9[] = {$/;"	v
-num_errors	fxlms.c	/^static int num_errors[9] = {1,2,3,9, 10, 11,19, 27, 35};$/;"	v	file:
+num_errors	fxlms.c	/^static int num_errors[] = {1,2,3,9, 10, 11};$/;"	v	file:
 parse_command_line	dsp-open.c	/^static void parse_command_line(int argc, char **argv){$/;"	f	file:
 plate_params	fxlms.c	/^static struct fxlms_params plate_params = {$/;"	v	typeref:struct:fxlms_params	file:
 prepare_err	fxlms.c	/^void prepare_err(complex *e_com, const struct lf_ring *e){$/;"	f
 prepare_ref	fxlms.c	/^void prepare_ref(complex *r_com, const struct lf_ring *r){$/;"	f
 put_unaligned	compiler.h	89;"	d
-r	dsp-open.c	/^static struct lf_ring ***r;$/;"	v	typeref:struct:lf_ring	file:
+r	dsp-open.c	/^static struct lf_ring ****r;$/;"	v	typeref:struct:lf_ring	file:
 readb	asm_io.h	/^static inline u8 readb(const volatile void __iomem *addr)$/;"	f
 readl	asm_io.h	/^static inline u32 readl(const volatile void __iomem *addr)$/;"	f
 readw	asm_io.h	/^static inline u16 readw(const volatile void __iomem *addr)$/;"	f
@@ -1779,10 +1785,11 @@ roundup	compiler.h	66;"	d
 s	dsp-open.c	/^static const float ****s;$/;"	v	file:
 s16	asm_types.h	/^typedef int16_t s16;$/;"	t
 s32	asm_types.h	/^typedef int32_t s32;$/;"	t
+s64	asm_types.h	/^typedef int32_t s64;$/;"	t
 s8	asm_types.h	/^typedef int8_t s8;$/;"	t
 secondary_n	fxlms.c	/^	unsigned int secondary_n; \/\/secondary filter$/;"	m	struct:fxlms_params	file:
 send_data	dsp-open.c	/^static void send_data(){$/;"	f	file:
-send_to_dsp	pu-shm.c	/^void send_to_dsp(int8_t *dst, unsigned int weight_n, unsigned int control_n, int node_id)$/;"	f
+send_to_dsp	pu-shm.c	/^void send_to_dsp(void *dst, unsigned int weight_n, unsigned int control_n, int node_id)$/;"	f
 shm_control	pu-shm.c	/^void *shm_control[5];$/;"	v
 shm_offset	pu-shm.c	/^unsigned long long shm_offset = 0x1000000;$/;"	v
 shm_ringbuf	pu-shm.c	/^const void *shm_ringbuf[5];$/;"	v
@@ -1791,6 +1798,7 @@ show_data	pu-shm.c	/^void show_data(int16_t *dst, unsigned int seq)$/;"	f
 u	fxlms.c	/^	unsigned int u;$/;"	m	struct:fxlms_params	file:
 u16	asm_types.h	/^typedef uint16_t u16;$/;"	t
 u32	asm_types.h	/^typedef uint32_t u32;$/;"	t
+u64	asm_types.h	/^typedef uint64_t u64;$/;"	t
 u8	asm_types.h	/^typedef uint8_t u8;$/;"	t
 unlikely	compiler.h	24;"	d
 w	dsp-open.c	/^static float ***w;$/;"	v	file:
